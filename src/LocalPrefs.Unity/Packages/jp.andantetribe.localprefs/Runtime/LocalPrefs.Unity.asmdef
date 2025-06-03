@@ -1,0 +1,28 @@
+{
+    "name": "LocalPrefs.Unity",
+    "rootNamespace": "AndanteTribe.IO.Unity",
+    "references": [
+        "GUID:034c977408447714e91237bd5f97c1ff"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "LocalPrefs.Core.dll",
+        "LocalPrefs.Json.dll",
+        "LocalPrefs.MessagePack.dll",
+        "System.Text.Json.dll",
+        "MessagePack.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.github.messagepack-csharp",
+            "expression": "",
+            "define": "ENABLE_MESSAGEPACK"
+        }
+    ],
+    "noEngineReferences": false
+}

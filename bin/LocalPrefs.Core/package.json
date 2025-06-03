@@ -1,0 +1,12 @@
+{
+  "name": "jp.andantetribe.localprefs.core",
+  "displayName": "LocalPrefs Core",
+  "author": {
+    "name": "AndanteTribe",
+    "url": "https://github.com/AndanteTribe"
+  },
+  "version": "0.0.0",
+  "unity": "2022.3",
+  "description": "A local persistence library as an alternative to UnityEngine.PlayerPrefs, for .NET and Unity.",
+  "license": "MIT"
+}

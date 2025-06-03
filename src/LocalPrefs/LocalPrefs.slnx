@@ -1,0 +1,6 @@
+﻿<Solution>
+  <Project Path="..\LocalPrefs.Json\LocalPrefs.Json.csproj" Type="Classic C#" />
+  <Project Path="..\LocalPrefs.MessagePack\LocalPrefs.MessagePack.csproj" Type="Classic C#" />
+  <Project Path="..\LocalPrefs.Tests\LocalPrefs.Tests.csproj" Type="Classic C#" />
+  <Project Path="LocalPrefs.csproj" Type="Classic C#" />
+</Solution>

@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.1;net9.0</TargetFrameworks>
+        <LangVersion>9</LangVersion>
+        <IsPackable>false</IsPackable>
+        <RootNamespace>AndanteTribe.IO.Tests</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector" Version="6.0.2"/>
+        <PackageReference Include="MessagePack" Version="3.1.3" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0"/>
+        <PackageReference Include="NUnit" Version="3.14.0" />
+        <PackageReference Include="NUnit.Analyzers" Version="4.4.0"/>
+        <PackageReference Include="NUnit3TestAdapter" Version="4.6.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\LocalPrefs.Json\LocalPrefs.Json.csproj" />
+      <ProjectReference Include="..\LocalPrefs.MessagePack\LocalPrefs.MessagePack.csproj" />
+      <ProjectReference Include="..\LocalPrefs\LocalPrefs.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Remove="**\package.json" />
+        <None Remove="**\*.asmdef" />
+        <None Remove="**\*.meta" />
+        <None Remove=".gitignore" />
+    </ItemGroup>
+
+</Project>
