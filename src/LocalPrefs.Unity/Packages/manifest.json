@@ -4,6 +4,7 @@
     "com.github.messagepack-csharp": "https://github.com/MessagePack-CSharp/MessagePack-CSharp.git?path=src/MessagePack.UnityClient/Assets/Scripts/MessagePack",
     "com.unity.ide.rider": "3.0.36",
     "com.unity.test-framework": "1.4.6",
+    "com.unity.testtools.codecoverage": "1.2.6",
     "jp.andantetribe.localprefs.core": "file:../../../bin/LocalPrefs.Core",
     "jp.andantetribe.localprefs.json": "file:../../../bin/LocalPrefs.Json",
     "jp.andantetribe.localprefs.messagepack": "file:../../../bin/LocalPrefs.MessagePack",
