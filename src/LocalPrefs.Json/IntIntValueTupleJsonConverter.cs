@@ -9,32 +9,32 @@ internal sealed class IntIntValueTupleJsonConverter : JsonConverter<ValueTuple<i
     {
         if (reader.TokenType == JsonTokenType.Null)
         {
-            throw new InvalidOperationException("If Data is Null, ValueTuple is not null.");
+            throw new JsonException($"If Data is Null, ValueTuple is not null. TokenType: {reader.TokenType}, Position: {reader.TokenStartIndex}");
         }
 
         if (reader.TokenType != JsonTokenType.StartArray)
         {
-            throw new InvalidOperationException("Expected start of array for ValueTuple.");
+            throw new JsonException($"Expected start of array for ValueTuple. TokenType: {reader.TokenType}, Position: {reader.TokenStartIndex}");
         }
 
         reader.Read();
         if (reader.TokenType != JsonTokenType.Number)
         {
-            throw new InvalidOperationException("Expected first item of ValueTuple to be an integer.");
+            throw new JsonException($"Expected first item of ValueTuple to be an integer. TokenType: {reader.TokenType}, Position: {reader.TokenStartIndex}");
         }
         var item1 = reader.GetInt32();
 
         reader.Read();
         if (reader.TokenType != JsonTokenType.Number)
         {
-            throw new InvalidOperationException("Expected second item of ValueTuple to be an integer.");
+            throw new JsonException($"Expected second item of ValueTuple to be an integer. TokenType: {reader.TokenType}, Position: {reader.TokenStartIndex}");
         }
         var item2 = reader.GetInt32();
 
         reader.Read();
         if (reader.TokenType != JsonTokenType.EndArray)
         {
-            throw new InvalidOperationException("Expected end of array for ValueTuple.");
+            throw new JsonException($"Expected end of array for ValueTuple. TokenType: {reader.TokenType}, Position: {reader.TokenStartIndex}");
         }
 
         return (item1, item2);
