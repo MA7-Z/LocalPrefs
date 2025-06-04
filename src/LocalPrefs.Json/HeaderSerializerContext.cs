@@ -7,8 +7,10 @@ namespace AndanteTribe.IO.Json;
     GenerationMode = JsonSourceGenerationMode.Default,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     WriteIndented = false)]
-[JsonSerializable(typeof(Dictionary<string, LightRange>))]
+[JsonSerializable(typeof(Dictionary<string, ValueTuple<int, int>>))]
 [ExcludeFromCodeCoverage]
 internal partial class HeaderSerializerContext : JsonSerializerContext
 {
+    static HeaderSerializerContext() =>
+        s_defaultOptions.Converters.Add(new IntIntValueTupleJsonConverter());
 }
