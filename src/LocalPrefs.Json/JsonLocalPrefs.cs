@@ -14,7 +14,7 @@ public class JsonLocalPrefs : ILocalPrefs
     private readonly string _savePath;
     private readonly JsonSerializerOptions? _options;
     private readonly IFileAccessor _fileAccessor;
-    private readonly Dictionary<string, LightRange> _header;
+    private readonly Dictionary<string, (int offset, int count)> _header;
     private readonly ByteBufferWriter _writer;
     private readonly Utf8JsonWriter _jsonWriter;
 
@@ -39,7 +39,7 @@ public class JsonLocalPrefs : ILocalPrefs
         if (dataArray.Length > 0)
         {
             var reader = new Utf8JsonReader(dataArray);
-            _header = JsonSerializer.Deserialize<Dictionary<string, LightRange>>(ref reader, HeaderSerializerContext.Default.Options) ?? new();
+            _header = JsonSerializer.Deserialize<Dictionary<string, (int, int)>>(ref reader, HeaderSerializerContext.Default.Options) ?? new();
 
             var consumed = (int)reader.BytesConsumed;
             var dataLength = dataArray.Length - consumed;
@@ -74,16 +74,16 @@ public class JsonLocalPrefs : ILocalPrefs
 
         if (_header.TryGetValue(key, out var prev))
         {
-            var trailingOffset = prev.Offset + prev.Count;
+            var trailingOffset = prev.offset + prev.count;
             using (ArrayPool<byte>.Shared.Rent(_writer.CurrentOffset - trailingOffset, out var trailingData))
             {
                 _writer.WrittenSpan[trailingOffset..].CopyTo(trailingData);
 
-                _writer.CurrentOffset = prev.Offset;
+                _writer.CurrentOffset = prev.offset;
                 JsonSerializer.Serialize(_jsonWriter, value, _options);
                 _jsonWriter.Reset();
-                var count = _writer.CurrentOffset - prev.Offset;
-                _header[key] = prev with { Count = count };
+                var count = _writer.CurrentOffset - prev.offset;
+                _header[key] = prev with { count = count };
 
                 trailingData.CopyTo(_writer.GetSpan(trailingData.Length));
                 _writer.Advance(trailingData.Length);
@@ -93,17 +93,17 @@ public class JsonLocalPrefs : ILocalPrefs
                     var i = 0;
                     foreach (var (k, (o, _)) in _header)
                     {
-                        if (o > prev.Offset)
+                        if (o > prev.offset)
                         {
                             updateKeys[i++] = k;
                         }
                     }
 
-                    var diff = count - prev.Count;
+                    var diff = count - prev.count;
                     foreach (var k in updateKeys[..i])
                     {
                         var v = _header[k];
-                        _header[k] = v with { Offset = v.Offset + diff };
+                        _header[k] = v with { offset = v.offset + diff };
                     }
                 }
             }
@@ -129,11 +129,11 @@ public class JsonLocalPrefs : ILocalPrefs
         var prev = _header[key];
         _header.Remove(key);
 
-        var trailingOffset = prev.Offset + prev.Count;
+        var trailingOffset = prev.offset + prev.count;
         using (ArrayPool<byte>.Shared.Rent(_writer.CurrentOffset - trailingOffset, out var trailingData))
         {
             _writer.WrittenSpan[trailingOffset..].CopyTo(trailingData);
-            _writer.CurrentOffset = prev.Offset;
+            _writer.CurrentOffset = prev.offset;
             trailingData.CopyTo(_writer.GetSpan(trailingData.Length));
             _writer.Advance(trailingData.Length);
         }
@@ -143,7 +143,7 @@ public class JsonLocalPrefs : ILocalPrefs
             var i = 0;
             foreach (var (k, (o, _)) in _header)
             {
-                if (o > prev.Offset)
+                if (o > prev.offset)
                 {
                     updateKeys[i++] = k;
                 }
@@ -152,7 +152,7 @@ public class JsonLocalPrefs : ILocalPrefs
             foreach (var k in updateKeys[..i])
             {
                 var v = _header[k];
-                _header[k] = v with { Offset = v.Offset - prev.Count };
+                _header[k] = v with { offset = v.offset - prev.count };
             }
         }
 
