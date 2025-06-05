@@ -13,11 +13,11 @@ namespace AndanteTribe.IO.Unity
         public override bool CanRead => true;
         public override bool CanSeek => false;
         public override bool CanWrite => true;
-        public override long Length => throw new NotSupportedException("Length is not supported for IndexedDBStream.");
+        public override long Length => throw new NotSupportedException("Length is not supported for LSStream.");
         public override long Position
         {
-            get => throw new NotSupportedException("Position is not supported for IndexedDBStream.");
-            set => throw new NotSupportedException("Position is not supported for IndexedDBStream.");
+            get => throw new NotSupportedException("Position is not supported for LSStream.");
+            set => throw new NotSupportedException("Position is not supported for LSStream.");
         }
 
         public LSStream(string path) => Path = path;
@@ -45,12 +45,11 @@ namespace AndanteTribe.IO.Unity
             return buffer[0];
         }
 
-        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException("Seek is not supported for IndexedDBStream.");
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException("Seek is not supported for LSStream.");
 
-        public override void SetLength(long value) => throw new NotSupportedException("SetLength is not supported for IndexedDBStream.");
+        public override void SetLength(long value) => throw new NotSupportedException("SetLength is not supported for LSStream.");
 
-        public override void Write(byte[] buffer, int offset, int count) =>
-            LSUtils.WriteAllBytes(Path, buffer.AsSpan(offset, count));
+        public override void Write(byte[] buffer, int offset, int count) => LSUtils.WriteAllBytes(Path, buffer.AsSpan(offset, count));
     }
 }
 
