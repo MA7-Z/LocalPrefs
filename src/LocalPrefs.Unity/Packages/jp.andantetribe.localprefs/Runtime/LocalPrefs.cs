@@ -12,9 +12,9 @@ namespace AndanteTribe.IO.Unity
         static LocalPrefs()
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
-            const string savePath = "localprefs";
+            const string savePath = "localprefs-shared";
 #else
-            var savePath = UnityEngine.Application.persistentDataPath + "/localprefs";
+            var savePath = UnityEngine.Application.persistentDataPath + "/localprefs-shared";
 #endif
 
 #if ENABLE_MESSAGEPACK
