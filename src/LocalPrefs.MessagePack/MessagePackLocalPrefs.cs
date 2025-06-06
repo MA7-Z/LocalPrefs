@@ -1,5 +1,4 @@
-﻿using System.Buffers;
-using MessagePack;
+﻿using MessagePack;
 using MessagePack.Formatters;
 using AndanteTribe.IO.Internal;
 
@@ -90,36 +89,31 @@ public class MessagePackLocalPrefs : ILocalPrefs
         if (_header.TryGetValue(key, out var prev))
         {
             var trailingOffset = prev.offset + prev.count;
-            using (ArrayPool<byte>.Shared.Rent(_writer.CurrentOffset - trailingOffset, out var trailingData))
+            using var trailingData = new PooledList<byte>(_writer.CurrentOffset - trailingOffset);
+            trailingData.AddRange(_writer.WrittenSpan[trailingOffset..]);
+
+            _writer.CurrentOffset = prev.offset;
+            MessagePackSerializer.Serialize(_writer, value, _options, cancellationToken);
+            var count = _writer.CurrentOffset - prev.offset;
+            _header[key] = (prev.offset, count);
+
+            trailingData.AsSpan().CopyTo(_writer.GetSpan(trailingData.Count));
+            _writer.Advance(trailingData.Count);
+
+            using var updateKeys = new PooledList<string>(_header.Count);
+            foreach (var (k, (o, _)) in _header)
             {
-                _writer.WrittenSpan[trailingOffset..].CopyTo(trailingData);
-
-                _writer.CurrentOffset = prev.offset;
-                MessagePackSerializer.Serialize(_writer, value, _options, cancellationToken);
-                var count = _writer.CurrentOffset - prev.offset;
-                _header[key] = (prev.offset, count);
-
-                trailingData.CopyTo(_writer.GetSpan(trailingData.Length));
-                _writer.Advance(trailingData.Length);
-
-                using (ArrayPool<string>.Shared.Rent(_header.Count, out var updateKeys))
+                if (o > prev.offset)
                 {
-                    var i = 0;
-                    foreach (var (k, (o, _)) in _header)
-                    {
-                        if (o > prev.offset)
-                        {
-                            updateKeys[i++] = k;
-                        }
-                    }
-
-                    var diff = count - prev.count;
-                    foreach (var k in updateKeys[..i])
-                    {
-                        var (o, c) = _header[k];
-                        _header[k] = (o + diff, c);
-                    }
+                    updateKeys.Add(k);
                 }
+            }
+
+            var diff = count - prev.count;
+            foreach (var k in updateKeys.AsSpan())
+            {
+                var (o, c) = _header[k];
+                _header[k] = (o + diff, c);
             }
         }
         else
@@ -143,26 +137,25 @@ public class MessagePackLocalPrefs : ILocalPrefs
         _header.Remove(key);
 
         var trailingOffset = prev.offset + prev.count;
-        using (ArrayPool<byte>.Shared.Rent(_writer.CurrentOffset - trailingOffset, out var trailingData))
+        using (var trailingData = new PooledList<byte>(_writer.CurrentOffset - trailingOffset))
         {
-            _writer.WrittenSpan[trailingOffset..].CopyTo(trailingData);
+            trailingData.AddRange(_writer.WrittenSpan[trailingOffset..]);
             _writer.CurrentOffset = prev.offset;
-            trailingData.CopyTo(_writer.GetSpan(trailingData.Length));
-            _writer.Advance(trailingData.Length);
+            trailingData.AsSpan().CopyTo(_writer.GetSpan(trailingData.Count));
+            _writer.Advance(trailingData.Count);
         }
 
-        using (ArrayPool<string>.Shared.Rent(_header.Count, out var updateKeys))
+        using (var updateKeys = new PooledList<string>(_header.Count))
         {
-            var i = 0;
             foreach (var (k, (o, _)) in _header)
             {
                 if (o > prev.offset)
                 {
-                    updateKeys[i++] = k;
+                    updateKeys.Add(k);
                 }
             }
 
-            foreach (var k in updateKeys[..i])
+            foreach (var k in updateKeys.AsSpan())
             {
                 var (o, c) = _header[k];
                 _header[k] = (o - prev.count, c);
