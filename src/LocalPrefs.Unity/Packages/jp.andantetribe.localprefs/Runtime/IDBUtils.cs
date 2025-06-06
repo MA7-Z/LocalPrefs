@@ -10,10 +10,21 @@ using AOT;
 
 namespace AndanteTribe.IO.Unity
 {
+    /// <summary>
+    /// Provides utility methods for interacting with IndexedDB in a WebGL environment.
+    /// </summary>
     public static class IDBUtils
     {
         private static readonly List<EventID> s_ids = new();
 
+        /// <summary>
+        /// Asynchronously writes the specified byte array to IndexedDB using the specified path as key.
+        /// If the path already exists in IndexedDB, it is overwritten.
+        /// </summary>
+        /// <param name="path">The path string that serves as the key.</param>
+        /// <param name="bytes">The bytes to write to IndexedDB.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is None.</param>
+        /// <returns>A task that represents the asynchronous write operation.</returns>
         public static async ValueTask WriteAllBytesAsync(string path, byte[] bytes, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -28,6 +39,14 @@ namespace AndanteTribe.IO.Unity
             await new ValueTask(source, source.Version);
         }
 
+        /// <summary>
+        /// Asynchronously writes the specified byte array to IndexedDB using the specified path as key.
+        /// If the path already exists in IndexedDB, it is overwritten.
+        /// </summary>
+        /// <param name="path">The path string that serves as the key.</param>
+        /// <param name="bytes"> The bytes to write to IndexedDB.</param>
+        /// <param name="cancellationToken"> The token to monitor for cancellation requests. The default value is None.</param>
+        /// <returns>A task that represents the asynchronous write operation.</returns>
         public static async ValueTask WriteAllBytesAsync(string path, ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -49,6 +68,12 @@ namespace AndanteTribe.IO.Unity
             await new ValueTask(source, source.Version);
         }
 
+        /// <summary>
+        /// Asynchronously deletes the specified path from IndexedDB.
+        /// </summary>
+        /// <param name="path"> The path string that serves as the key to delete.</param>
+        /// <param name="cancellationToken"> The token to monitor for cancellation requests. The default value is None.</param>
+        /// <returns>A task that represents the asynchronous delete operation.</returns>
         public static async ValueTask DeleteAsync(string path, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -63,6 +88,12 @@ namespace AndanteTribe.IO.Unity
             await new ValueTask(source, source.Version);
         }
 
+        /// <summary>
+        /// Asynchronously reads all bytes from IndexedDB using the specified path as key.
+        /// </summary>
+        /// <param name="path"> The path string that serves as the key.</param>
+        /// <param name="cancellationToken"> The token to monitor for cancellation requests. The default value is None.</param>
+        /// <returns>A task that represents the asynchronous read operation, containing the byte array read from IndexedDB.</returns>
         public static async ValueTask<byte[]> ReadAllBytesAsync(string path, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();

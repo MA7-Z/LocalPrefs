@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace AndanteTribe.IO.Unity
 {
+    /// <summary>
+    /// Provides file access functionality for WebGL builds using Local Storage.
+    /// </summary>
     public class LSAccessor : IFileAccessor
     {
         private LSStream? _cacheWriteStream;
