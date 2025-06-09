@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using AndanteTribe.IO.Internal;
 
 namespace AndanteTribe.IO.Json;
@@ -10,6 +11,13 @@ namespace AndanteTribe.IO.Json;
 /// </summary>
 public class JsonLocalPrefs : ILocalPrefs
 {
+    private static readonly JsonSerializerOptions s_headerOptions = new()
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        WriteIndented = false,
+        Converters = { new IntIntValueTupleJsonConverter() },
+    };
+
     private readonly string _savePath;
     private readonly JsonSerializerOptions? _options;
     private readonly IFileAccessor _fileAccessor;
@@ -38,7 +46,7 @@ public class JsonLocalPrefs : ILocalPrefs
         if (dataArray.Length > 0)
         {
             var reader = new Utf8JsonReader(dataArray);
-            _header = JsonSerializer.Deserialize<Dictionary<string, (int, int)>>(ref reader, HeaderSerializerContext.Default.Options) ?? new();
+            _header = JsonSerializer.Deserialize<Dictionary<string, (int, int)>>(ref reader, s_headerOptions) ?? new();
 
             var consumed = (int)reader.BytesConsumed;
             var dataLength = dataArray.Length - consumed;
@@ -111,7 +119,7 @@ public class JsonLocalPrefs : ILocalPrefs
         }
 
         await using var stream = _fileAccessor.GetWriteStream(_savePath);
-        await JsonSerializer.SerializeAsync(stream, _header, HeaderSerializerContext.Default.Options, cancellationToken);
+        await JsonSerializer.SerializeAsync(stream, _header, s_headerOptions, cancellationToken);
         await stream.WriteAsync(_writer.WrittenMemory, cancellationToken);
     }
 
@@ -150,7 +158,7 @@ public class JsonLocalPrefs : ILocalPrefs
         }
 
         await using var stream = _fileAccessor.GetWriteStream(_savePath);
-        await JsonSerializer.SerializeAsync(stream, _header, HeaderSerializerContext.Default.Options, cancellationToken);
+        await JsonSerializer.SerializeAsync(stream, _header, s_headerOptions, cancellationToken);
         await stream.WriteAsync(_writer.WrittenMemory, cancellationToken);
     }
 
