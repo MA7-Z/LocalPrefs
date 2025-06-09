@@ -14,7 +14,7 @@ namespace AndanteTribe.IO.Tests
     public class LocalPrefsTest
     {
 #if UNITY_EDITOR
-        private static string TestFilePath => UnityEngine.Application.persistentDataPath + "/localprefs-shared";
+        private static string TestFilePath => UnityEngine.Application.persistentDataPath + "/localprefs-test";
 #else
         private const string TestFilePath = "template";
 #endif
@@ -22,7 +22,7 @@ namespace AndanteTribe.IO.Tests
         private static readonly Func<ILocalPrefs>[] s_factories =
         {
             () => new JsonLocalPrefs(TestFilePath),
-            () => new MessagePackLocalPrefs(TestFilePath)
+            () => new MessagePackLocalPrefs(TestFilePath),
         };
 
         [MessagePackObject]
