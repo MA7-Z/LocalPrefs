@@ -18,7 +18,7 @@ namespace AndanteTribe.IO.Unity
         /// <summary>
         /// Initializes a new instance of the <see cref="LSAccessor"/> class with the specified path.
         /// </summary>
-        /// <param name="path"></param>
+        /// <param name="path">The key to the Local Storage file.</param>
         public LSAccessor(in string path)
         {
             _path = path;
