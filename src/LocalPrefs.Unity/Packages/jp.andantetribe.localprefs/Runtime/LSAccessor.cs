@@ -12,31 +12,30 @@ namespace AndanteTribe.IO.Unity
     /// </summary>
     public class LSAccessor : IFileAccessor
     {
-        private LSStream? _cacheWriteStream;
+        private readonly string _path;
+        private readonly LSStream _cacheWriteStream;
 
-        /// <inheritdoc />
-        public byte[] ReadAllBytes(in string path) => LSUtils.ReadAllBytes(path);
-
-        /// <inheritdoc />
-        public Stream GetWriteStream(in string path)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LSAccessor"/> class with the specified path.
+        /// </summary>
+        /// <param name="path">The key to the Local Storage file.</param>
+        public LSAccessor(in string path)
         {
-            if (_cacheWriteStream == null)
-            {
-                _cacheWriteStream = new LSStream(path);
-            }
-            else if (_cacheWriteStream.Path != path)
-            {
-                _cacheWriteStream.Dispose();
-                _cacheWriteStream = new LSStream(path);
-            }
-
-            return _cacheWriteStream;
+            _path = path;
+            _cacheWriteStream = new LSStream(path);
         }
 
         /// <inheritdoc />
-        public ValueTask DeleteAsync(string path, CancellationToken cancellationToken)
+        public byte[] ReadAllBytes() => LSUtils.ReadAllBytes(_path);
+
+        /// <inheritdoc />
+        public Stream GetWriteStream() => _cacheWriteStream;
+
+        /// <inheritdoc />
+        public ValueTask DeleteAsync(CancellationToken cancellationToken)
         {
-            LSUtils.Delete(path);
+            cancellationToken.ThrowIfCancellationRequested();
+            LSUtils.Delete(_path);
             return default;
         }
     }

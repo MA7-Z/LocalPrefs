@@ -12,15 +12,15 @@ namespace AndanteTribe.IO.Unity
         static LocalPrefs()
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
-            const string savePath = "localprefs-shared";
+            var fileAccessor = IFileAccessor.Create("localprefs-shared");
 #else
-            var savePath = UnityEngine.Application.persistentDataPath + "/localprefs-shared";
+            var fileAccessor = IFileAccessor.Create(UnityEngine.Application.persistentDataPath + "/localprefs-shared");
 #endif
 
 #if ENABLE_MESSAGEPACK
-            Shared = new MessagePack.MessagePackLocalPrefs(savePath);
+            Shared = new MessagePack.MessagePackLocalPrefs(fileAccessor);
 #else
-            Shared = new Json.JsonLocalPrefs(savePath);
+            Shared = new Json.JsonLocalPrefs(fileAccessor);
 #endif
         }
     }

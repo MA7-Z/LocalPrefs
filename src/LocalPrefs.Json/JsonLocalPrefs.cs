@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using AndanteTribe.IO.Internal;
 
 namespace AndanteTribe.IO.Json;
@@ -10,7 +11,13 @@ namespace AndanteTribe.IO.Json;
 /// </summary>
 public class JsonLocalPrefs : ILocalPrefs
 {
-    private readonly string _savePath;
+    private static readonly JsonSerializerOptions s_headerOptions = new()
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        WriteIndented = false,
+        Converters = { new IntIntValueTupleJsonConverter() },
+    };
+
     private readonly JsonSerializerOptions? _options;
     private readonly IFileAccessor _fileAccessor;
     private readonly Dictionary<string, (int offset, int count)> _header;
@@ -26,19 +33,30 @@ public class JsonLocalPrefs : ILocalPrefs
     /// </summary>
     /// <param name="savePath">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
     /// <param name="options">Optional JSON serializer options to customize serialization behavior. If null, default options are used.</param>
-    /// <param name="fileAccessor">Optional file system accessor for reading/writing operations. If null, the default implementation is used.</param>
-    public JsonLocalPrefs(string savePath, JsonSerializerOptions? options = null, IFileAccessor? fileAccessor = null)
+    public JsonLocalPrefs(in string savePath, JsonSerializerOptions? options = null) : this(IFileAccessor.Create(savePath), options)
     {
-        _savePath = savePath;
-        _options = options ?? JsonSerializerOptions.Default;
-        _fileAccessor = fileAccessor ?? IFileAccessor.Default;
+    }
 
-        var dataArray = _fileAccessor.ReadAllBytes(savePath);
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JsonLocalPrefs"/> class.
+    /// This constructor loads existing data from the specified file path if available,
+    /// or initializes a new storage structure if the file doesn't exist.
+    /// The implementation maintains a header dictionary that maps keys to their position
+    /// in the data buffer for efficient retrieval and updates.
+    /// </summary>
+    /// <param name="fileAccessor">Optional file system accessor for reading/writing operations. If null, the default implementation is used.</param>
+    /// <param name="options">Optional JSON serializer options to customize serialization behavior. If null, default options are used.</param>
+    public JsonLocalPrefs(IFileAccessor fileAccessor, JsonSerializerOptions? options = null)
+    {
+        _fileAccessor = fileAccessor;
+        _options = options ?? JsonSerializerOptions.Default;
+
+        var dataArray = _fileAccessor.ReadAllBytes();
         _writer = new ByteBufferWriter(dataArray);
         if (dataArray.Length > 0)
         {
             var reader = new Utf8JsonReader(dataArray);
-            _header = JsonSerializer.Deserialize<Dictionary<string, (int, int)>>(ref reader, HeaderSerializerContext.Default.Options) ?? new();
+            _header = JsonSerializer.Deserialize<Dictionary<string, (int, int)>>(ref reader, s_headerOptions) ?? new();
 
             var consumed = (int)reader.BytesConsumed;
             var dataLength = dataArray.Length - consumed;
@@ -110,8 +128,8 @@ public class JsonLocalPrefs : ILocalPrefs
             _header.Add(key, (currentOffset, _writer.CurrentOffset - currentOffset));
         }
 
-        await using var stream = _fileAccessor.GetWriteStream(_savePath);
-        await JsonSerializer.SerializeAsync(stream, _header, HeaderSerializerContext.Default.Options, cancellationToken);
+        await using var stream = _fileAccessor.GetWriteStream();
+        await JsonSerializer.SerializeAsync(stream, _header, s_headerOptions, cancellationToken);
         await stream.WriteAsync(_writer.WrittenMemory, cancellationToken);
     }
 
@@ -149,8 +167,8 @@ public class JsonLocalPrefs : ILocalPrefs
             }
         }
 
-        await using var stream = _fileAccessor.GetWriteStream(_savePath);
-        await JsonSerializer.SerializeAsync(stream, _header, HeaderSerializerContext.Default.Options, cancellationToken);
+        await using var stream = _fileAccessor.GetWriteStream();
+        await JsonSerializer.SerializeAsync(stream, _header, s_headerOptions, cancellationToken);
         await stream.WriteAsync(_writer.WrittenMemory, cancellationToken);
     }
 
@@ -161,7 +179,7 @@ public class JsonLocalPrefs : ILocalPrefs
         _header.Clear();
         _writer.Clear();
 
-        return _fileAccessor.DeleteAsync(_savePath, cancellationToken);
+        return _fileAccessor.DeleteAsync(cancellationToken);
     }
 
     /// <inheritdoc />

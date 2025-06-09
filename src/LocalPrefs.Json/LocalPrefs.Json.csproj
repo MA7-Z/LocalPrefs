@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.1;net8.0</TargetFrameworks>
+        <TargetFrameworks>netstandard2.1;net7.0</TargetFrameworks>
         <LangVersion>13</LangVersion>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <OutputType>Library</OutputType>
         <RootNamespace>AndanteTribe.IO.Json</RootNamespace>
-        <Version>0.2.0</Version>
+        <Version>0.2.1</Version>
 
         <!-- NuGet Packaging -->
         <PackageId>LocalPrefs.Json</PackageId>

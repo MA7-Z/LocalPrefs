@@ -13,22 +13,35 @@ namespace AndanteTribe.IO.MessagePack;
 /// </summary>
 public class MessagePackLocalPrefs : ILocalPrefs
 {
-    private readonly string _savePath;
     private readonly MessagePackSerializerOptions? _options;
     private readonly IFileAccessor _fileAccessor;
     private readonly Dictionary<string, (int offset, int count)> _header;
     private readonly ByteBufferWriter _writer;
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="MessagePackLocalPrefs"/> class with custom serializer options.
+    /// This constructor loads existing data from the specified file path if available,
+    /// or initializes a new storage structure if the file doesn't exist.
+    /// The implementation maintains a header dictionary that maps keys to their position
+    /// in the data buffer for efficient retrieval and updates.
+    /// LZ4 block compression is applied by default to reduce storage size.
+    /// </summary>
+    /// <param name="savePath">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
+    /// <param name="resolver">Optional custom formatter resolver for <see cref="MessagePack"/> serialization. If null, default resolver is used.</param>
+    public MessagePackLocalPrefs(in string savePath, IFormatterResolver? resolver)
+        : this(IFileAccessor.Create(savePath), resolver == null ? null : MessagePackSerializer.DefaultOptions.WithResolver(resolver))
+    {
+    }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="MessagePackLocalPrefs"/> class with a custom formatter resolver.
     /// This constructor provides a convenient way to specify a custom formatter resolver for <see cref="MessagePack"/> serialization.
     /// The resolver will be applied to the default MessagePack serializer options.
     /// </summary>
-    /// <param name="savePath">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
-    /// <param name="resolver">Optional custom formatter resolver for <see cref="MessagePack"/> serialization. If null, default resolver is used.</param>
     /// <param name="fileAccessor">Optional file system accessor for reading/writing operations. If null, the default implementation is used.</param>
-    public MessagePackLocalPrefs(string savePath, IFormatterResolver? resolver, IFileAccessor? fileAccessor = null)
-        : this(savePath, resolver == null ? null : MessagePackSerializer.DefaultOptions.WithResolver(resolver), fileAccessor)
+    /// <param name="resolver">Optional custom formatter resolver for <see cref="MessagePack"/> serialization. If null, default resolver is used.</param>
+    public MessagePackLocalPrefs(IFileAccessor fileAccessor, IFormatterResolver? resolver)
+        : this(fileAccessor, resolver == null ? null : MessagePackSerializer.DefaultOptions.WithResolver(resolver))
     {
     }
 
@@ -42,14 +55,27 @@ public class MessagePackLocalPrefs : ILocalPrefs
     /// </summary>
     /// <param name="savePath">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
     /// <param name="options">Optional MessagePack serializer options to customize serialization behavior. If null, default options are used with LZ4 compression.</param>
-    /// <param name="fileAccessor">Optional file system accessor for reading/writing operations. If null, the default implementation is used.</param>
-    public MessagePackLocalPrefs(string savePath, MessagePackSerializerOptions? options = null, IFileAccessor? fileAccessor = null)
+    public MessagePackLocalPrefs(in string savePath, MessagePackSerializerOptions? options = null)
+        : this(IFileAccessor.Create(savePath), options)
     {
-        _savePath = savePath;
-        _options = (options ?? MessagePackSerializer.DefaultOptions).WithCompression(MessagePackCompression.Lz4Block);
-        _fileAccessor = fileAccessor ?? IFileAccessor.Default;
+    }
 
-        var dataArray = _fileAccessor.ReadAllBytes(savePath);
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MessagePackLocalPrefs"/> class with custom serializer options.
+    /// This constructor loads existing data from the specified file path if available,
+    /// or initializes a new storage structure if the file doesn't exist.
+    /// The implementation maintains a header dictionary that maps keys to their position
+    /// in the data buffer for efficient retrieval and updates.
+    /// LZ4 block compression is applied by default to reduce storage size.
+    /// </summary>
+    /// <param name="fileAccessor">Optional file system accessor for reading/writing operations. If null, the default implementation is used.</param>
+    /// <param name="options">Optional MessagePack serializer options to customize serialization behavior. If null, default options are used with LZ4 compression.</param>
+    public MessagePackLocalPrefs(IFileAccessor fileAccessor, MessagePackSerializerOptions? options = null)
+    {
+        _options = (options ?? MessagePackSerializer.DefaultOptions).WithCompression(MessagePackCompression.Lz4Block);
+        _fileAccessor = fileAccessor;
+
+        var dataArray = _fileAccessor.ReadAllBytes();
         _writer = new ByteBufferWriter(dataArray);
         if (dataArray.Length > 0)
         {
@@ -123,7 +149,7 @@ public class MessagePackLocalPrefs : ILocalPrefs
             _header.Add(key, (currentOffset, _writer.CurrentOffset - currentOffset));
         }
 
-        await using var stream = _fileAccessor.GetWriteStream(_savePath);
+        await using var stream = _fileAccessor.GetWriteStream();
         await MessagePackSerializer.SerializeAsync(stream, _header, HeaderFormatterResolver.StandardOptions, cancellationToken);
         await stream.WriteAsync(_writer.WrittenMemory, cancellationToken);
     }
@@ -162,7 +188,7 @@ public class MessagePackLocalPrefs : ILocalPrefs
             }
         }
 
-        await using var stream = _fileAccessor.GetWriteStream(_savePath);
+        await using var stream = _fileAccessor.GetWriteStream();
         await MessagePackSerializer.SerializeAsync(stream, _header, HeaderFormatterResolver.StandardOptions, cancellationToken);
         await stream.WriteAsync(_writer.WrittenMemory, cancellationToken);
     }
@@ -174,7 +200,7 @@ public class MessagePackLocalPrefs : ILocalPrefs
         _header.Clear();
         _writer.Clear();
 
-        return _fileAccessor.DeleteAsync(_savePath, cancellationToken);
+        return _fileAccessor.DeleteAsync(cancellationToken);
     }
 
     /// <inheritdoc />
