@@ -4,6 +4,7 @@
 /// Abstract class that provides access to the file system.
 /// Abstracts file read/write operations for local preferences.
 /// </summary>
+/// <param name="savePath">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
 public abstract class FileAccessor(string savePath)
 {
     /// <summary>
