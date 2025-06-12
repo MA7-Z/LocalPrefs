@@ -8,6 +8,7 @@
         <OutputType>Library</OutputType>
         <RootNamespace>AndanteTribe.IO.Json</RootNamespace>
         <Version>0.2.2</Version>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
         <!-- NuGet Packaging -->
         <PackageId>LocalPrefs.Json</PackageId>

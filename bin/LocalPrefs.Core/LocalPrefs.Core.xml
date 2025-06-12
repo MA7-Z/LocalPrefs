@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>LocalPrefs.Core</name>
+    </assembly>
+    <members>
+        <member name="T:AndanteTribe.IO.FileAccessor">
+            <summary>
+            Abstract class that provides access to the file system.
+            Abstracts file read/write operations for local preferences.
+            </summary>
+            <param name="savePath">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
+        </member>
+        <member name="M:AndanteTribe.IO.FileAccessor.#ctor(System.String)">
+            <summary>
+            Abstract class that provides access to the file system.
+            Abstracts file read/write operations for local preferences.
+            </summary>
+            <param name="savePath">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
+        </member>
+        <member name="F:AndanteTribe.IO.FileAccessor.SavePath">
+            <summary>
+            The file path where preference data will be stored.
+            </summary>
+        </member>
+        <member name="M:AndanteTribe.IO.FileAccessor.ReadAllBytes">
+            <summary>
+            Reads the entire file into a byte array.
+            </summary>
+            <returns>A byte array containing the file's contents.</returns>
+        </member>
+        <member name="M:AndanteTribe.IO.FileAccessor.GetWriteStream">
+            <summary>
+            Gets a stream for writing to a file.
+            </summary>
+            <returns>A stream that can be used to write to the file.</returns>
+        </member>
+        <member name="M:AndanteTribe.IO.FileAccessor.DeleteAsync(System.Threading.CancellationToken)">
+            <summary>
+            Deletes a file asynchronously.
+            </summary>
+            <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+            <returns>A task that represents the asynchronous delete operation.</returns>
+        </member>
+        <member name="M:AndanteTribe.IO.FileAccessor.Create(System.String@)">
+            <summary>
+            Creates a default <see cref="T:AndanteTribe.IO.FileAccessor"/> for the specified path.
+            </summary>
+            <param name="path">Path to the file where preference data will be stored.</param>
+            <returns>An instance of <see cref="T:AndanteTribe.IO.FileAccessor"/> that uses the default file system operations.</returns>
+        </member>
+        <member name="T:AndanteTribe.IO.FileAccessor.DefaultFileAccessor">
+            <summary>
+            Default implementation of the FileAccessor interface.
+            Provides standard file system operations using <see cref="N:System.IO"/>.
+            </summary>
+            <param name="path">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
+        </member>
+        <member name="M:AndanteTribe.IO.FileAccessor.DefaultFileAccessor.#ctor(System.String@)">
+            <summary>
+            Default implementation of the FileAccessor interface.
+            Provides standard file system operations using <see cref="N:System.IO"/>.
+            </summary>
+            <param name="path">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
+        </member>
+        <member name="M:AndanteTribe.IO.FileAccessor.DefaultFileAccessor.ReadAllBytes">
+            <inheritdoc />
+        </member>
+        <member name="M:AndanteTribe.IO.FileAccessor.DefaultFileAccessor.GetWriteStream">
+            <inheritdoc />
+        </member>
+        <member name="M:AndanteTribe.IO.FileAccessor.DefaultFileAccessor.DeleteAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:AndanteTribe.IO.ILocalPrefs">
+            <summary>
+            Interface for managing local preferences/settings storage.
+            Provides methods to load, save, and delete local data.
+            </summary>
+        </member>
+        <member name="M:AndanteTribe.IO.ILocalPrefs.Load``1(System.String)">
+            <summary>
+            Loads a value of the specified type from local storage.
+            </summary>
+            <typeparam name="T">The type of data to load.</typeparam>
+            <param name="key">The unique identifier for the stored data.</param>
+            <returns>The loaded value, or default value if not found.</returns>
+        </member>
+        <member name="M:AndanteTribe.IO.ILocalPrefs.SaveAsync``1(System.String,``0,System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously saves a value to local storage.
+            </summary>
+            <typeparam name="T">The type of data to save.</typeparam>
+            <param name="key">The unique identifier for storing the data.</param>
+            <param name="value">The value to save.</param>
+            <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+            <returns>A task that represents the asynchronous save operation.</returns>
+        </member>
+        <member name="M:AndanteTribe.IO.ILocalPrefs.DeleteAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously deletes data with the specified key from local storage.
+            </summary>
+            <param name="key">The unique identifier of the data to delete.</param>
+            <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+            <returns>A task that represents the asynchronous delete operation.</returns>
+        </member>
+        <member name="M:AndanteTribe.IO.ILocalPrefs.DeleteAllAsync(System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously deletes all stored local data.
+            </summary>
+            <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+            <returns>A task that represents the asynchronous delete all operation.</returns>
+        </member>
+        <member name="M:AndanteTribe.IO.ILocalPrefs.HasKey(System.String)">
+            <summary>
+            Determines whether data exists for the specified key.
+            </summary>
+            <param name="key">The key to check for existence.</param>
+            <returns><c>true</c> if data exists for the specified key; otherwise, <c>false</c>.</returns>
+        </member>
+    </members>
+</doc>

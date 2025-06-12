@@ -73,15 +73,18 @@ jobs:
           
           git add \
             ./bin/LocalPrefs.Core/package.json \
+            ./bin/LocalPrefs.Core/LocalPrefs.Core.dll \
+            ./bin/LocalPrefs.Core/LocalPrefs.Core.xml \
             ./bin/LocalPrefs.Json/package.json \
+            ./bin/LocalPrefs.Json/LocalPrefs.Json.dll \
+            ./bin/LocalPrefs.Json/LocalPrefs.Json.xml \
             ./bin/LocalPrefs.MessagePack/package.json \
+            ./bin/LocalPrefs.MessagePack/LocalPrefs.MessagePack.dll \
+            ./bin/LocalPrefs.MessagePack/LocalPrefs.MessagePack.xml \
             ./src/LocalPrefs.Unity/Packages/jp.andantetribe.localprefs/package.json \
             ./src/LocalPrefs.Json/LocalPrefs.Json.csproj \
             ./src/LocalPrefs.MessagePack/LocalPrefs.MessagePack.csproj \
-            ./src/LocalPrefs/LocalPrefs.csproj \
-            ./bin/LocalPrefs.Core/LocalPrefs.Core.dll \
-            ./bin/LocalPrefs.Json/LocalPrefs.Json.dll \
-            ./bin/LocalPrefs.MessagePack/LocalPrefs.MessagePack.dll
+            ./src/LocalPrefs/LocalPrefs.csproj
           git commit -m "chore: bump version to ${VERSION}"
           git push origin HEAD
     - name: create pull request
