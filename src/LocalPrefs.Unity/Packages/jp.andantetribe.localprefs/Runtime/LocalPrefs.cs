@@ -12,9 +12,9 @@ namespace AndanteTribe.IO.Unity
         static LocalPrefs()
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
-            var fileAccessor = IFileAccessor.Create("localprefs-shared");
+            var fileAccessor = new LSAccessor("localprefs-shared");
 #else
-            var fileAccessor = IFileAccessor.Create(UnityEngine.Application.persistentDataPath + "/localprefs-shared");
+            var fileAccessor = FileAccessor.Create(UnityEngine.Application.persistentDataPath + "/localprefs-shared");
 #endif
 
 #if ENABLE_MESSAGEPACK
