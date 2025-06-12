@@ -64,7 +64,9 @@ jobs:
     - uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 9.0.x
-    - run: dotnet build ./src/LocalPrefs/LocalPrefs.slnx --configuration Release --no-restore
+    - run: |
+        dotnet restore ./src/LocalPrefs/LocalPrefs.slnx
+        dotnet build ./src/LocalPrefs/LocalPrefs.slnx --configuration Release --no-restore
     - name: commit and push
       run: |
           VERSION="${{ github.event.inputs.version }}"
