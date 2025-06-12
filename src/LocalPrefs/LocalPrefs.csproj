@@ -9,6 +9,7 @@
         <RootNamespace>AndanteTribe.IO</RootNamespace>
         <Version>0.2.2</Version>
         <AssemblyName>LocalPrefs.Core</AssemblyName>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
         <!-- NuGet Packaging -->
         <PackageId>LocalPrefs.Core</PackageId>

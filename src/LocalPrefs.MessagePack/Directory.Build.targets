@@ -4,5 +4,6 @@
         <Message Text="OutputPath : $(OutputPath)" Importance="high" />
         <Message Text="MSBuildThisFileDirectory : $(MSBuildThisFileDirectory)" Importance="high" />
         <Copy SourceFiles="$(OutputPath)/LocalPrefs.MessagePack.dll" DestinationFolder="$(MSBuildThisFileDirectory)../../bin/LocalPrefs.MessagePack" SkipUnchangedFiles="true" />
+        <Copy SourceFiles="$(OutputPath)/LocalPrefs.MessagePack.xml" DestinationFolder="$(MSBuildThisFileDirectory)../../bin/LocalPrefs.MessagePack" SkipUnchangedFiles="true" />
     </Target>
 </Project>

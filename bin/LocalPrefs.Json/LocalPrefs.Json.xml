@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>LocalPrefs.Json</name>
+    </assembly>
+    <members>
+        <member name="T:AndanteTribe.IO.Json.JsonLocalPrefs">
+            <summary>
+            JSON-based implementation of <see cref="T:AndanteTribe.IO.ILocalPrefs"/> that provides efficient key-value storage
+            with persistent data on the filesystem. This implementation uses <see cref="N:System.Text.Json"/> for serialization
+            and maintains an in-memory index of stored data for optimized reading and writing operations.
+            </summary>
+        </member>
+        <member name="M:AndanteTribe.IO.Json.JsonLocalPrefs.#ctor(System.String@,System.Text.Json.JsonSerializerOptions)">
+            <summary>
+            Initializes a new instance of the <see cref="T:AndanteTribe.IO.Json.JsonLocalPrefs"/> class.
+            This constructor loads existing data from the specified file path if available,
+            or initializes a new storage structure if the file doesn't exist.
+            The implementation maintains a header dictionary that maps keys to their position
+            in the data buffer for efficient retrieval and updates.
+            </summary>
+            <param name="savePath">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
+            <param name="options">Optional JSON serializer options to customize serialization behavior. If null, default options are used.</param>
+        </member>
+        <member name="M:AndanteTribe.IO.Json.JsonLocalPrefs.#ctor(AndanteTribe.IO.FileAccessor,System.Text.Json.JsonSerializerOptions)">
+            <summary>
+            Initializes a new instance of the <see cref="T:AndanteTribe.IO.Json.JsonLocalPrefs"/> class.
+            This constructor loads existing data from the specified file path if available,
+            or initializes a new storage structure if the file doesn't exist.
+            The implementation maintains a header dictionary that maps keys to their position
+            in the data buffer for efficient retrieval and updates.
+            </summary>
+            <param name="fileAccessor">Optional file system accessor for reading/writing operations. If null, the default implementation is used.</param>
+            <param name="options">Optional JSON serializer options to customize serialization behavior. If null, default options are used.</param>
+        </member>
+        <member name="M:AndanteTribe.IO.Json.JsonLocalPrefs.Load``1(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:AndanteTribe.IO.Json.JsonLocalPrefs.SaveAsync``1(System.String,``0,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:AndanteTribe.IO.Json.JsonLocalPrefs.DeleteAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:AndanteTribe.IO.Json.JsonLocalPrefs.DeleteAllAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:AndanteTribe.IO.Json.JsonLocalPrefs.HasKey(System.String)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

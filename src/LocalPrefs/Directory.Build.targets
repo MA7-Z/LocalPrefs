@@ -4,5 +4,6 @@
         <Message Text="OutputPath : $(OutputPath)" Importance="high" />
         <Message Text="MSBuildThisFileDirectory : $(MSBuildThisFileDirectory)" Importance="high" />
         <Copy SourceFiles="$(OutputPath)/LocalPrefs.Core.dll" DestinationFolder="$(MSBuildThisFileDirectory)../../bin/LocalPrefs.Core" SkipUnchangedFiles="true" />
+        <Copy SourceFiles="$(OutputPath)/LocalPrefs.Core.xml" DestinationFolder="$(MSBuildThisFileDirectory)../../bin/LocalPrefs.Core" SkipUnchangedFiles="true" />
     </Target>
 </Project>

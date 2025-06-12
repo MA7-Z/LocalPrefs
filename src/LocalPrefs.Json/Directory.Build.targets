@@ -4,5 +4,6 @@
         <Message Text="OutputPath : $(OutputPath)" Importance="high" />
         <Message Text="MSBuildThisFileDirectory : $(MSBuildThisFileDirectory)" Importance="high" />
         <Copy SourceFiles="$(OutputPath)/LocalPrefs.Json.dll" DestinationFolder="$(MSBuildThisFileDirectory)../../bin/LocalPrefs.Json" SkipUnchangedFiles="true" />
+        <Copy SourceFiles="$(OutputPath)/LocalPrefs.Json.xml" DestinationFolder="$(MSBuildThisFileDirectory)../../bin/LocalPrefs.Json" SkipUnchangedFiles="true" />
     </Target>
 </Project>
