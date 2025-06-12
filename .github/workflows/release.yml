@@ -96,4 +96,5 @@ jobs:
           --base main \
           --head "$BRANCH" \
           --title "chore: bump version to $VERSION" \
+          --fill \
           --assignee "${{ github.actor }}"
