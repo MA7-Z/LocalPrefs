@@ -19,7 +19,7 @@ public class JsonLocalPrefs : ILocalPrefs
     };
 
     private readonly JsonSerializerOptions? _options;
-    private readonly IFileAccessor _fileAccessor;
+    private readonly FileAccessor _fileAccessor;
     private readonly Dictionary<string, (int offset, int count)> _header;
     private readonly ByteBufferWriter _writer;
     private readonly Utf8JsonWriter _jsonWriter;
@@ -33,7 +33,7 @@ public class JsonLocalPrefs : ILocalPrefs
     /// </summary>
     /// <param name="savePath">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
     /// <param name="options">Optional JSON serializer options to customize serialization behavior. If null, default options are used.</param>
-    public JsonLocalPrefs(in string savePath, JsonSerializerOptions? options = null) : this(IFileAccessor.Create(savePath), options)
+    public JsonLocalPrefs(in string savePath, JsonSerializerOptions? options = null) : this(FileAccessor.Create(savePath), options)
     {
     }
 
@@ -46,7 +46,7 @@ public class JsonLocalPrefs : ILocalPrefs
     /// </summary>
     /// <param name="fileAccessor">Optional file system accessor for reading/writing operations. If null, the default implementation is used.</param>
     /// <param name="options">Optional JSON serializer options to customize serialization behavior. If null, default options are used.</param>
-    public JsonLocalPrefs(IFileAccessor fileAccessor, JsonSerializerOptions? options = null)
+    public JsonLocalPrefs(FileAccessor fileAccessor, JsonSerializerOptions? options = null)
     {
         _fileAccessor = fileAccessor;
         _options = options ?? JsonSerializerOptions.Default;

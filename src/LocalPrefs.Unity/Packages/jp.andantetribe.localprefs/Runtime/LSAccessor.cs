@@ -10,32 +10,27 @@ namespace AndanteTribe.IO.Unity
     /// <summary>
     /// Provides file access functionality for WebGL builds using Local Storage.
     /// </summary>
-    public class LSAccessor : IFileAccessor
+    public class LSAccessor : FileAccessor
     {
-        private readonly string _path;
         private readonly LSStream _cacheWriteStream;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LSAccessor"/> class with the specified path.
         /// </summary>
         /// <param name="path">The key to the Local Storage file.</param>
-        public LSAccessor(in string path)
-        {
-            _path = path;
-            _cacheWriteStream = new LSStream(path);
-        }
+        public LSAccessor(in string path) : base(path) => _cacheWriteStream = new LSStream(path);
 
         /// <inheritdoc />
-        public byte[] ReadAllBytes() => LSUtils.ReadAllBytes(_path);
+        public override byte[] ReadAllBytes() => LSUtils.ReadAllBytes(SavePath);
 
         /// <inheritdoc />
-        public Stream GetWriteStream() => _cacheWriteStream;
+        public override Stream GetWriteStream() => _cacheWriteStream;
 
         /// <inheritdoc />
-        public ValueTask DeleteAsync(CancellationToken cancellationToken)
+        public override ValueTask DeleteAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            LSUtils.Delete(_path);
+            LSUtils.Delete(SavePath);
             return default;
         }
     }
