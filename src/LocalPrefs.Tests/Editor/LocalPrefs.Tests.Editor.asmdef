@@ -2,8 +2,8 @@
     "name": "LocalPrefs.Tests.Editor",
     "rootNamespace": "AndanteTribe.IO.Tests",
     "references": [
-        "GUID:e4cd858fa11fd074b8703cce42793f1a",
-        "GUID:4f835d8e3f058124c88097a8be1c20d2"
+        "LocalPrefs.Unity",
+        "LocalPrefs.Tests"
     ],
     "includePlatforms": [
         "Editor"
