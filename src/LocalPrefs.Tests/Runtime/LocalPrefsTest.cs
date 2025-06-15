@@ -137,6 +137,7 @@ namespace AndanteTribe.IO.Tests
             catch (KeyNotFoundException)
             {
                 Assert.That(true);
+                return;
             }
             Assert.That(false);
         }
@@ -180,6 +181,7 @@ namespace AndanteTribe.IO.Tests
             catch (KeyNotFoundException)
             {
                 Assert.That(true);
+                return;
             }
             Assert.That(false);
         }
