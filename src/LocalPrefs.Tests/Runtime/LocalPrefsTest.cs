@@ -138,6 +138,7 @@ namespace AndanteTribe.IO.Tests
             {
                 Assert.That(true);
             }
+            Assert.That(false);
         }
 
         public static async Task DeleteAll_RemovesAll(Func<ILocalPrefs> factory)
@@ -180,6 +181,7 @@ namespace AndanteTribe.IO.Tests
             {
                 Assert.That(true);
             }
+            Assert.That(false);
         }
 
         public static async Task Delete_SecondElement(Func<ILocalPrefs> factory)
