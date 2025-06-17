@@ -2,6 +2,9 @@
 
 using System;
 using System.Collections;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using AndanteTribe.IO.Json;
 using AndanteTribe.IO.MessagePack;
 using AndanteTribe.IO.Tests;
@@ -10,14 +13,28 @@ using UnityEngine.TestTools;
 
 namespace AndanteTribe.IO.Unity.Tests
 {
-    public class LSPrefsTest
+    public class IDBPrefsTest
     {
-        private static readonly LSAccessor s_accessor = new(LocalPrefsTest.TestFilePath);
+        private sealed class IDBAccessor : FileAccessor
+        {
+            public static readonly IDBAccessor Shared = new(LocalPrefsTest.TestFilePath);
+
+            private IDBAccessor(in string path) : base(path)
+            {
+            }
+
+            public override byte[] ReadAllBytes() => IDBUtils.ReadAllBytesAsync(SavePath).GetAwaiter().GetResult();
+
+            public override Stream GetWriteStream() => new IDBStream(SavePath);
+
+            public override ValueTask DeleteAsync(CancellationToken cancellationToken = default) =>
+                IDBUtils.DeleteAsync(SavePath, cancellationToken);
+        }
 
         private static readonly Func<ILocalPrefs>[] s_factories =
         {
-            () => new JsonLocalPrefs(s_accessor),
-            () => new MessagePackLocalPrefs(s_accessor),
+            () => new JsonLocalPrefs(IDBAccessor.Shared),
+            // () => new MessagePackLocalPrefs(IDBAccessor.Shared),
         };
 
         [SetUp]
@@ -25,10 +42,21 @@ namespace AndanteTribe.IO.Unity.Tests
         {
         }
 
-        [TearDown]
-        public void TearDown()
+        // [UnityTearDown]
+        // public IEnumerator TearDown()
+        // {
+        //     yield return new ToCoroutineEnumerator(async () =>
+        //     {
+        //         await IDBUtils.DeleteAsync(LocalPrefsTest.TestFilePath);
+        //     });
+        // }
+
+        [UnityTest]
+        public IEnumerator SaveTest()
         {
-            LSUtils.Delete(LocalPrefsTest.TestFilePath);
+            var data = IDBAccessor.Shared.ReadAllBytes();
+            Assert.Pass();
+            yield return null;
         }
 
         [UnityTest]

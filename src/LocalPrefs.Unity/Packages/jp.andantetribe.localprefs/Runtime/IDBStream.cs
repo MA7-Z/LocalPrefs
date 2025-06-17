@@ -15,7 +15,10 @@ namespace AndanteTribe.IO.Unity
     /// <remarks>No multi-threading support because multi-threading is not allowed in the WebGL environment.</remarks>
     public class IDBStream : Stream
     {
-        public readonly string Path;
+        private readonly string _path;
+        private byte[] _buffer = Array.Empty<byte>();
+        private int _written;
+        private bool _disposed;
 
         /// <inheritdoc />
         public override bool CanRead => true;
@@ -40,7 +43,22 @@ namespace AndanteTribe.IO.Unity
         /// Initializes a new instance of the <see cref="IDBStream"/> class with the specified path.
         /// </summary>
         /// <param name="path">The key to the IndexedDB.</param>
-        public IDBStream(string path) => Path = path;
+        public IDBStream(string path) => _path = path;
+
+        /// <inheritdoc />
+        protected override void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                _disposed = true;
+                if (_buffer.Length > 0)
+                {
+                    ArrayPool<byte>.Shared.Return(_buffer);
+                }
+                return;
+            }
+            base.Dispose(disposing);
+        }
 
         /// <inheritdoc />
         public override void Flush()
@@ -66,7 +84,7 @@ namespace AndanteTribe.IO.Unity
 
             await using var _ = cancellationToken.RegisterWithoutCaptureExecutionContext(() => IDBUtils.CancelEventInternal(eventID));
 
-            IDBUtils.ReadAllBytesInternal(Path, EventID.GetNext(source));
+            IDBUtils.ReadAllBytesInternal(_path, EventID.GetNext(source));
             return (await new ValueTask<(byte[] _, int size)>(source, source.Version)).size;
         }
 
@@ -96,12 +114,41 @@ namespace AndanteTribe.IO.Unity
             WriteAsync(new(buffer, offset, count)).GetAwaiter().GetResult();
 
         /// <inheritdoc />
-        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
-            IDBUtils.WriteAllBytesAsync(Path, new ReadOnlyMemory<byte>(buffer, offset, count), cancellationToken).AsTask();
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var length = WriteBuffer(new ReadOnlySpan<byte>(buffer, offset, count));
+            return IDBUtils.WriteAllBytesAsync(_path, new ReadOnlyMemory<byte>(_buffer, 0, length), cancellationToken).AsTask();
+        }
 
         /// <inheritdoc />
-        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default) =>
-            IDBUtils.WriteAllBytesAsync(Path, buffer, cancellationToken);
+        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var length = WriteBuffer(buffer.Span);
+            return IDBUtils.WriteAllBytesAsync(_path, new ReadOnlyMemory<byte>(_buffer, 0, length), cancellationToken);
+        }
+
+        private int WriteBuffer(in ReadOnlySpan<byte> value)
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(nameof(IDBStream));
+            }
+            if (_buffer.Length < _written + value.Length)
+            {
+                var newBuffer = ArrayPool<byte>.Shared.Rent(_written + value.Length);
+                if (_buffer.Length != 0)
+                {
+                    _buffer.AsSpan().CopyTo(newBuffer);
+                    ArrayPool<byte>.Shared.Return(_buffer);
+                }
+                _buffer = newBuffer;
+            }
+
+            value.CopyTo(_buffer.AsSpan()[_written..]);
+            return _written += value.Length;
+        }
     }
 }
 
