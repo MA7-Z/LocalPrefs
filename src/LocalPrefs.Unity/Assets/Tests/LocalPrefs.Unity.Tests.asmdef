@@ -6,7 +6,9 @@
         "LocalPrefs.Unity",
         "LocalPrefs.Tests"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "WebGL"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,

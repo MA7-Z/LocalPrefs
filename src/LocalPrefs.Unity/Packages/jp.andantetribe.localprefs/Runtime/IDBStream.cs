@@ -18,7 +18,6 @@ namespace AndanteTribe.IO.Unity
         private readonly string _path;
         private byte[] _buffer = Array.Empty<byte>();
         private int _written;
-        private bool _disposed;
 
         /// <inheritdoc />
         public override bool CanRead => true;
@@ -46,21 +45,6 @@ namespace AndanteTribe.IO.Unity
         public IDBStream(string path) => _path = path;
 
         /// <inheritdoc />
-        protected override void Dispose(bool disposing)
-        {
-            if (!_disposed)
-            {
-                _disposed = true;
-                if (_buffer.Length > 0)
-                {
-                    ArrayPool<byte>.Shared.Return(_buffer);
-                }
-                return;
-            }
-            base.Dispose(disposing);
-        }
-
-        /// <inheritdoc />
         public override void Flush()
         {
             // Flush is typically implemented as an empty method to ensure full compatibility with other Stream types.
@@ -68,7 +52,7 @@ namespace AndanteTribe.IO.Unity
 
         /// <inheritdoc />
         public override int Read(byte[] buffer, int offset, int count) =>
-            ReadAsync(new Memory<byte>(buffer, offset, count)).GetAwaiter().GetResult();
+            throw new NotSupportedException("Synchronous Read is not supported in WebGL. Use ReadAsync instead.");
 
         /// <inheritdoc />
         public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
@@ -89,19 +73,8 @@ namespace AndanteTribe.IO.Unity
         }
 
         /// <inheritdoc />
-        public override int ReadByte()
-        {
-            var oneByteArray = ArrayPool<byte>.Shared.Rent(1);
-            try
-            {
-                var r = Read(oneByteArray, 0, 1);
-                return r == 0 ? -1 : oneByteArray[0];
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(oneByteArray);
-            }
-        }
+        public override int ReadByte() =>
+            throw new NotSupportedException("Synchronous ReadByte is not supported in WebGL. Use ReadAsync instead.");
 
         /// <inheritdoc />
         public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException("Seek is not supported for IndexedDBStream.");
@@ -111,43 +84,33 @@ namespace AndanteTribe.IO.Unity
 
         /// <inheritdoc />
         public override void Write(byte[] buffer, int offset, int count) =>
-            WriteAsync(new(buffer, offset, count)).GetAwaiter().GetResult();
+            throw new NotSupportedException("Synchronous Write is not supported in WebGL. Use WriteAsync instead.");
 
         /// <inheritdoc />
         public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var length = WriteBuffer(new ReadOnlySpan<byte>(buffer, offset, count));
-            return IDBUtils.WriteAllBytesAsync(_path, new ReadOnlyMemory<byte>(_buffer, 0, length), cancellationToken).AsTask();
+            WriteBuffer(new ReadOnlySpan<byte>(buffer, offset, count));
+            return IDBUtils.WriteAllBytesAsync(_path, new ReadOnlyMemory<byte>(_buffer, 0, _written), cancellationToken).AsTask();
         }
 
         /// <inheritdoc />
         public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var length = WriteBuffer(buffer.Span);
-            return IDBUtils.WriteAllBytesAsync(_path, new ReadOnlyMemory<byte>(_buffer, 0, length), cancellationToken);
+            WriteBuffer(buffer.Span);
+            return IDBUtils.WriteAllBytesAsync(_path, new ReadOnlyMemory<byte>(_buffer, 0, _written), cancellationToken);
         }
 
-        private int WriteBuffer(in ReadOnlySpan<byte> value)
+        private void WriteBuffer(in ReadOnlySpan<byte> value)
         {
-            if (_disposed)
-            {
-                throw new ObjectDisposedException(nameof(IDBStream));
-            }
             if (_buffer.Length < _written + value.Length)
             {
-                var newBuffer = ArrayPool<byte>.Shared.Rent(_written + value.Length);
-                if (_buffer.Length != 0)
-                {
-                    _buffer.AsSpan().CopyTo(newBuffer);
-                    ArrayPool<byte>.Shared.Return(_buffer);
-                }
-                _buffer = newBuffer;
+                Array.Resize(ref _buffer, _written + value.Length);
             }
 
             value.CopyTo(_buffer.AsSpan()[_written..]);
-            return _written += value.Length;
+            _written += value.Length;
         }
     }
 }
