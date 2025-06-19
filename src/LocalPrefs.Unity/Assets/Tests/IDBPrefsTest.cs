@@ -34,7 +34,7 @@ namespace AndanteTribe.IO.Unity.Tests
         private static readonly Func<ILocalPrefs>[] s_factories =
         {
             () => new JsonLocalPrefs(IDBAccessor.Shared),
-            // () => new MessagePackLocalPrefs(IDBAccessor.Shared),
+            () => new MessagePackLocalPrefs(IDBAccessor.Shared),
         };
 
         [SetUp]
@@ -42,21 +42,13 @@ namespace AndanteTribe.IO.Unity.Tests
         {
         }
 
-        // [UnityTearDown]
-        // public IEnumerator TearDown()
-        // {
-        //     yield return new ToCoroutineEnumerator(async () =>
-        //     {
-        //         await IDBUtils.DeleteAsync(LocalPrefsTest.TestFilePath);
-        //     });
-        // }
-
-        [UnityTest]
-        public IEnumerator SaveTest()
+        [UnityTearDown]
+        public IEnumerator TearDown()
         {
-            var data = IDBAccessor.Shared.ReadAllBytes();
-            Assert.Pass();
-            yield return null;
+            yield return new ToCoroutineEnumerator(async () =>
+            {
+                await IDBUtils.DeleteAsync(LocalPrefsTest.TestFilePath);
+            });
         }
 
         [UnityTest]
