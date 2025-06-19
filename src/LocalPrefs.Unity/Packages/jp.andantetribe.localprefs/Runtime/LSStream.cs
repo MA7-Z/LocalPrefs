@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Unity.Collections;
 
 namespace AndanteTribe.IO.Unity
 {
@@ -13,7 +14,9 @@ namespace AndanteTribe.IO.Unity
     /// </summary>
     public class LSStream : Stream
     {
-        public readonly string Path;
+        private readonly string _path;
+        private NativeArray<byte> _buffer;
+        private int _written;
 
         /// <inheritdoc />
         public override bool CanRead => true;
@@ -38,7 +41,17 @@ namespace AndanteTribe.IO.Unity
         /// Initializes a new instance of the <see cref="LSStream"/> class with the specified path.
         /// </summary>
         /// <param name="path"> The key to the Local Storage file.</param>
-        public LSStream(string path) => Path = path;
+        public LSStream(string path) => _path = path;
+
+        /// <inheritdoc />
+        protected override void Dispose(bool disposing)
+        {
+            if (_buffer.IsCreated)
+            {
+                _buffer.Dispose();
+            }
+            base.Dispose(disposing);
+        }
 
         /// <inheritdoc />
         public override void Flush()
@@ -49,7 +62,7 @@ namespace AndanteTribe.IO.Unity
         /// <inheritdoc />
         public override int Read(byte[] buffer, int offset, int count)
         {
-            var data = LSUtils.ReadAllText(Path);
+            var data = LSUtils.ReadAllText(_path);
             return Convert.TryFromBase64String(data, buffer.AsSpan(offset, count), out var written) ? written : 0;
         }
 
@@ -65,14 +78,14 @@ namespace AndanteTribe.IO.Unity
         public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var data = LSUtils.ReadAllText(Path);
+            var data = LSUtils.ReadAllText(_path);
             return new ValueTask<int>(Convert.TryFromBase64String(data, buffer.Span, out var written) ? written : 0);
         }
 
         /// <inheritdoc />
         public override int ReadByte()
         {
-            var data = LSUtils.ReadAllText(Path);
+            var data = LSUtils.ReadAllText(_path);
             var buffer = (Span<byte>)stackalloc byte[1];
             if (!Convert.TryFromBase64String(data, buffer, out var written) || written == 0)
             {
@@ -89,7 +102,8 @@ namespace AndanteTribe.IO.Unity
         public override void SetLength(long value) => throw new NotSupportedException("SetLength is not supported for LSStream.");
 
         /// <inheritdoc />
-        public override void Write(byte[] buffer, int offset, int count) => LSUtils.WriteAllBytes(Path, buffer.AsSpan(offset, count));
+        public override void Write(byte[] buffer, int offset, int count) =>
+            LSUtils.WriteAllBytes(_path, WriteBuffer(new ReadOnlySpan<byte>(buffer, offset, count)));
 
         /// <inheritdoc />
         public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
@@ -103,8 +117,30 @@ namespace AndanteTribe.IO.Unity
         public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            LSUtils.WriteAllBytes(Path, buffer.Span);
+            LSUtils.WriteAllBytes(_path, WriteBuffer(buffer.Span));
             return default;
+        }
+
+        private ReadOnlySpan<byte> WriteBuffer(in ReadOnlySpan<byte> value)
+        {
+            if (!_buffer.IsCreated && _buffer.Length != 0)
+            {
+                throw new ObjectDisposedException(nameof(LSStream));
+            }
+            if (_buffer.Length < _written + value.Length)
+            {
+                var newBuffer = new NativeArray<byte>(_written + value.Length, Allocator.Persistent);
+                if (_buffer.Length != 0)
+                {
+                    _buffer.CopyTo(newBuffer);
+                    _buffer.Dispose();
+                }
+                _buffer = newBuffer;
+            }
+
+            value.CopyTo(_buffer.AsSpan()[_written..]);
+            _written += value.Length;
+            return _buffer.AsSpan()[.._written];
         }
     }
 }

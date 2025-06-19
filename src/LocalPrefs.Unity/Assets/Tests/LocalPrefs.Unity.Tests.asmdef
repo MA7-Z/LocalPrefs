@@ -1,0 +1,27 @@
+{
+    "name": "LocalPrefs.Unity.Tests",
+    "rootNamespace": "AndanteTribe.IO.Unity.Tests",
+    "references": [
+        "UnityEngine.TestRunner",
+        "LocalPrefs.Unity",
+        "LocalPrefs.Tests"
+    ],
+    "includePlatforms": [
+        "WebGL"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll",
+        "MessagePack.dll",
+        "System.Text.Json.dll",
+        "LocalPrefs.Core.dll",
+        "LocalPrefs.Json.dll",
+        "LocalPrefs.MessagePack.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

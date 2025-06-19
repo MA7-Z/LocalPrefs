@@ -2,7 +2,6 @@
 #nullable enable
 
 using System;
-using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,7 +14,9 @@ namespace AndanteTribe.IO.Unity
     /// <remarks>No multi-threading support because multi-threading is not allowed in the WebGL environment.</remarks>
     public class IDBStream : Stream
     {
-        public readonly string Path;
+        private readonly string _path;
+        private byte[] _buffer = Array.Empty<byte>();
+        private int _written;
 
         /// <inheritdoc />
         public override bool CanRead => true;
@@ -40,7 +41,7 @@ namespace AndanteTribe.IO.Unity
         /// Initializes a new instance of the <see cref="IDBStream"/> class with the specified path.
         /// </summary>
         /// <param name="path">The key to the IndexedDB.</param>
-        public IDBStream(string path) => Path = path;
+        public IDBStream(string path) => _path = path;
 
         /// <inheritdoc />
         public override void Flush()
@@ -50,7 +51,7 @@ namespace AndanteTribe.IO.Unity
 
         /// <inheritdoc />
         public override int Read(byte[] buffer, int offset, int count) =>
-            ReadAsync(new Memory<byte>(buffer, offset, count)).GetAwaiter().GetResult();
+            throw new NotSupportedException("Synchronous Read is not supported in WebGL. Use ReadAsync instead.");
 
         /// <inheritdoc />
         public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
@@ -66,24 +67,13 @@ namespace AndanteTribe.IO.Unity
 
             await using var _ = cancellationToken.RegisterWithoutCaptureExecutionContext(() => IDBUtils.CancelEventInternal(eventID));
 
-            IDBUtils.ReadAllBytesInternal(Path, EventID.GetNext(source));
+            IDBUtils.ReadAllBytesInternal(_path, EventID.GetNext(source));
             return (await new ValueTask<(byte[] _, int size)>(source, source.Version)).size;
         }
 
         /// <inheritdoc />
-        public override int ReadByte()
-        {
-            var oneByteArray = ArrayPool<byte>.Shared.Rent(1);
-            try
-            {
-                var r = Read(oneByteArray, 0, 1);
-                return r == 0 ? -1 : oneByteArray[0];
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(oneByteArray);
-            }
-        }
+        public override int ReadByte() =>
+            throw new NotSupportedException("Synchronous ReadByte is not supported in WebGL. Use ReadAsync instead.");
 
         /// <inheritdoc />
         public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException("Seek is not supported for IndexedDBStream.");
@@ -93,15 +83,34 @@ namespace AndanteTribe.IO.Unity
 
         /// <inheritdoc />
         public override void Write(byte[] buffer, int offset, int count) =>
-            WriteAsync(new(buffer, offset, count)).GetAwaiter().GetResult();
+            throw new NotSupportedException("Synchronous Write is not supported in WebGL. Use WriteAsync instead.");
 
         /// <inheritdoc />
-        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
-            IDBUtils.WriteAllBytesAsync(Path, new ReadOnlyMemory<byte>(buffer, offset, count), cancellationToken).AsTask();
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            WriteBuffer(new ReadOnlySpan<byte>(buffer, offset, count));
+            return IDBUtils.WriteAllBytesAsync(_path, new ReadOnlyMemory<byte>(_buffer, 0, _written), cancellationToken).AsTask();
+        }
 
         /// <inheritdoc />
-        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default) =>
-            IDBUtils.WriteAllBytesAsync(Path, buffer, cancellationToken);
+        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            WriteBuffer(buffer.Span);
+            return IDBUtils.WriteAllBytesAsync(_path, new ReadOnlyMemory<byte>(_buffer, 0, _written), cancellationToken);
+        }
+
+        private void WriteBuffer(in ReadOnlySpan<byte> value)
+        {
+            if (_buffer.Length < _written + value.Length)
+            {
+                Array.Resize(ref _buffer, _written + value.Length);
+            }
+
+            value.CopyTo(_buffer.AsSpan()[_written..]);
+            _written += value.Length;
+        }
     }
 }
 
