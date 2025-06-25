@@ -15,7 +15,7 @@ public class JsonLocalPrefs : ILocalPrefs
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         WriteIndented = false,
-        Converters = { new IntIntValueTupleJsonConverter() },
+        Converters = { new HeaderJsonConverter() },
     };
 
     private readonly JsonSerializerOptions? _options;
@@ -128,9 +128,8 @@ public class JsonLocalPrefs : ILocalPrefs
             _header.Add(key, (currentOffset, _writer.CurrentOffset - currentOffset));
         }
 
-        await using var stream = _fileAccessor.GetWriteStream();
-        await JsonSerializer.SerializeAsync(stream, _header, s_headerOptions, cancellationToken);
-        await stream.WriteAsync(_writer.WrittenMemory, cancellationToken);
+        await _fileAccessor.WriteAsync(JsonSerializer.SerializeToUtf8Bytes(_header, s_headerOptions), cancellationToken);
+        await _fileAccessor.WriteAsync(_writer.WrittenMemory, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -167,9 +166,8 @@ public class JsonLocalPrefs : ILocalPrefs
             }
         }
 
-        await using var stream = _fileAccessor.GetWriteStream();
-        await JsonSerializer.SerializeAsync(stream, _header, s_headerOptions, cancellationToken);
-        await stream.WriteAsync(_writer.WrittenMemory, cancellationToken);
+        await _fileAccessor.WriteAsync(JsonSerializer.SerializeToUtf8Bytes(_header, s_headerOptions), cancellationToken);
+        await _fileAccessor.WriteAsync(_writer.WrittenMemory, cancellationToken);
     }
 
     /// <inheritdoc />

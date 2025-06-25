@@ -29,11 +29,12 @@
             </summary>
             <returns>A byte array containing the file's contents.</returns>
         </member>
-        <member name="M:AndanteTribe.IO.FileAccessor.GetWriteStream">
+        <member name="M:AndanteTribe.IO.FileAccessor.WriteAsync(System.ReadOnlyMemory{System.Byte},System.Threading.CancellationToken)">
             <summary>
-            Gets a stream for writing to a file.
+            Writes a byte array to the file asynchronously.
             </summary>
-            <returns>A stream that can be used to write to the file.</returns>
+            <param name="bytes">Bytes to write to the file.</param>
+            <param name="cancellationToken"> A token to cancel the asynchronous operation.</param>
         </member>
         <member name="M:AndanteTribe.IO.FileAccessor.DeleteAsync(System.Threading.CancellationToken)">
             <summary>
@@ -66,7 +67,7 @@
         <member name="M:AndanteTribe.IO.FileAccessor.DefaultFileAccessor.ReadAllBytes">
             <inheritdoc />
         </member>
-        <member name="M:AndanteTribe.IO.FileAccessor.DefaultFileAccessor.GetWriteStream">
+        <member name="M:AndanteTribe.IO.FileAccessor.DefaultFileAccessor.WriteAsync(System.ReadOnlyMemory{System.Byte},System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
         <member name="M:AndanteTribe.IO.FileAccessor.DefaultFileAccessor.DeleteAsync(System.Threading.CancellationToken)">

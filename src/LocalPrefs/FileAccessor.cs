@@ -19,10 +19,11 @@ public abstract class FileAccessor(string savePath)
     public abstract byte[] ReadAllBytes();
 
     /// <summary>
-    /// Gets a stream for writing to a file.
+    /// Writes a byte array to the file asynchronously.
     /// </summary>
-    /// <returns>A stream that can be used to write to the file.</returns>
-    public abstract Stream GetWriteStream();
+    /// <param name="bytes">Bytes to write to the file.</param>
+    /// <param name="cancellationToken"> A token to cancel the asynchronous operation.</param>
+    public abstract ValueTask WriteAsync(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a file asynchronously.
@@ -50,8 +51,12 @@ public abstract class FileAccessor(string savePath)
             File.Exists(SavePath) ? File.ReadAllBytes(SavePath) : [];
 
         /// <inheritdoc />
-        public override Stream GetWriteStream() =>
-            new FileStream(SavePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None, 1, true);
+        public override async ValueTask WriteAsync(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            await using var stream = File.Create(SavePath, 4096, FileOptions.Asynchronous);
+            await stream.WriteAsync(bytes, cancellationToken);
+        }
 
         /// <inheritdoc />
         public override ValueTask DeleteAsync(CancellationToken cancellationToken = default)

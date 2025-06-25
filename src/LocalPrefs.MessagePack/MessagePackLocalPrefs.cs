@@ -149,9 +149,8 @@ public class MessagePackLocalPrefs : ILocalPrefs
             _header.Add(key, (currentOffset, _writer.CurrentOffset - currentOffset));
         }
 
-        await using var stream = _fileAccessor.GetWriteStream();
-        await MessagePackSerializer.SerializeAsync(stream, _header, HeaderFormatterResolver.StandardOptions, cancellationToken);
-        await stream.WriteAsync(_writer.WrittenMemory, cancellationToken);
+        await _fileAccessor.WriteAsync(MessagePackSerializer.Serialize(_header, HeaderFormatterResolver.StandardOptions), cancellationToken);
+        await _fileAccessor.WriteAsync(_writer.WrittenMemory, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -188,9 +187,8 @@ public class MessagePackLocalPrefs : ILocalPrefs
             }
         }
 
-        await using var stream = _fileAccessor.GetWriteStream();
-        await MessagePackSerializer.SerializeAsync(stream, _header, HeaderFormatterResolver.StandardOptions, cancellationToken);
-        await stream.WriteAsync(_writer.WrittenMemory, cancellationToken);
+        await _fileAccessor.WriteAsync(MessagePackSerializer.Serialize(_header, HeaderFormatterResolver.StandardOptions), cancellationToken);
+        await _fileAccessor.WriteAsync(_writer.WrittenMemory, cancellationToken);
     }
 
     /// <inheritdoc />
