@@ -1,7 +1,7 @@
 ﻿#if UNITY_WEBGL
 #nullable enable
 
-using System.IO;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,7 +24,12 @@ namespace AndanteTribe.IO.Unity
         public override byte[] ReadAllBytes() => LSUtils.ReadAllBytes(SavePath);
 
         /// <inheritdoc />
-        public override Stream GetWriteStream() => new LSStream(SavePath);
+        public override ValueTask WriteAsync(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            LSUtils.WriteAllBytes(SavePath, bytes.Span);
+            return default;
+        }
 
         /// <inheritdoc />
         public override ValueTask DeleteAsync(CancellationToken cancellationToken = default)
