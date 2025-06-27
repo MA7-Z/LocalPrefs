@@ -24,6 +24,8 @@ public class JsonLocalPrefs : ILocalPrefs
     private readonly ByteBufferWriter _writer;
     private readonly Utf8JsonWriter _jsonWriter;
 
+    private int _headerSize;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="JsonLocalPrefs"/> class.
     /// This constructor loads existing data from the specified file path if available,
@@ -57,11 +59,8 @@ public class JsonLocalPrefs : ILocalPrefs
         {
             var reader = new Utf8JsonReader(dataArray);
             _header = JsonSerializer.Deserialize<Dictionary<string, (int, int)>>(ref reader, s_headerOptions) ?? new();
-
-            var consumed = (int)reader.BytesConsumed;
-            var dataLength = dataArray.Length - consumed;
-            dataArray.AsSpan(consumed, dataLength).CopyTo(dataArray.AsSpan(0, dataLength));
-            _writer.CurrentOffset = dataLength;
+            _headerSize = (int)reader.BytesConsumed;
+            _writer.CurrentOffset = dataArray.Length;
         }
         else
         {
@@ -77,7 +76,7 @@ public class JsonLocalPrefs : ILocalPrefs
         if (_header.TryGetValue(key, out var v))
         {
             var (offset, count) = v;
-            var reader = new Utf8JsonReader(_writer.WrittenSpan.Slice(offset, count));
+            var reader = new Utf8JsonReader(_writer.WrittenSpan.Slice(_headerSize + offset, count));
             return JsonSerializer.Deserialize<T>(ref reader, _options);
         }
 
@@ -85,89 +84,90 @@ public class JsonLocalPrefs : ILocalPrefs
     }
 
     /// <inheritdoc />
-    public async ValueTask SaveAsync<T>(string key, T value, CancellationToken cancellationToken = default)
+    public ValueTask SaveAsync<T>(string key, T value, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         if (_header.TryGetValue(key, out var prev))
         {
-            var trailingOffset = prev.offset + prev.count;
-            using var trailingData = new PooledList<byte>(_writer.CurrentOffset - trailingOffset);
-            trailingData.AddRange(_writer.WrittenSpan[trailingOffset..]);
-
-            _writer.CurrentOffset = prev.offset;
-            JsonSerializer.Serialize(_jsonWriter, value, _options);
-            _jsonWriter.Reset();
-            var count = _writer.CurrentOffset - prev.offset;
-            _header[key] = prev with { count = count };
-
-            trailingData.AsSpan().CopyTo(_writer.GetSpan(trailingData.Count));
-            _writer.Advance(trailingData.Count);
-
-            using var updateKeys = new PooledList<string>(_header.Count);
-            foreach (var (k, (o, _)) in _header)
+            using (var scope = _writer.GetWriteBlockScope(_headerSize + prev.offset, prev.count))
             {
-                if (o > prev.offset)
+                JsonSerializer.Serialize(_jsonWriter, value, _options);
+                _header[key] = prev with { count = scope.Consumed };
+                _jsonWriter.Reset();
+            }
+
+            using var updateKeys = new PooledList<KeyValuePair<string, (int, int)>>(_header.Count);
+            foreach (var v in _header)
+            {
+                if (v.Value.offset > prev.offset)
                 {
-                    updateKeys.Add(k);
+                    updateKeys.Add(v);
                 }
             }
 
-            var diff = count - prev.count;
-            foreach (var k in updateKeys.AsSpan())
+            var diff = prev.count - _header[key].count;
+            foreach (var (k, (o, c)) in updateKeys.AsSpan())
             {
-                var v = _header[k];
-                _header[k] = v with { offset = v.offset + diff };
+                _header[k] = (o + diff, c);
             }
         }
         else
         {
             var currentOffset = _writer.CurrentOffset;
+            var offset = currentOffset - _headerSize;
             JsonSerializer.Serialize(_jsonWriter, value, _options);
+            _header.Add(key, (offset, _writer.CurrentOffset - currentOffset));
             _jsonWriter.Reset();
-            _header.Add(key, (currentOffset, _writer.CurrentOffset - currentOffset));
         }
 
-        await _fileAccessor.WriteAsync(JsonSerializer.SerializeToUtf8Bytes(_header, s_headerOptions), cancellationToken);
-        await _fileAccessor.WriteAsync(_writer.WrittenMemory, cancellationToken);
+        using (var scope = _writer.GetWriteBlockScope(0, _headerSize))
+        {
+            JsonSerializer.Serialize(_jsonWriter, _header, s_headerOptions);
+            _headerSize = scope.Consumed;
+            _jsonWriter.Reset();
+        }
+
+        return _fileAccessor.WriteAsync(_writer.WrittenMemory, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async ValueTask DeleteAsync(string key, CancellationToken cancellationToken = default)
+    public ValueTask DeleteAsync(string key, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         var prev = _header[key];
         _header.Remove(key);
 
-        var trailingOffset = prev.offset + prev.count;
-        using (var trailingData = new PooledList<byte>(_writer.CurrentOffset - trailingOffset))
+        // Delete the key's data from the buffer
+        using (_writer.GetWriteBlockScope(_headerSize + prev.offset, prev.count))
         {
-            trailingData.AddRange(_writer.WrittenSpan[trailingOffset..]);
-            _writer.CurrentOffset = prev.offset;
-            trailingData.AsSpan().CopyTo(_writer.GetSpan(trailingData.Count));
-            _writer.Advance(trailingData.Count);
         }
 
-        using (var updateKeys = new PooledList<string>(_header.Count))
+        using (var updateKeys = new PooledList<KeyValuePair<string, (int, int)>>(_header.Count))
         {
-            foreach (var (k, (o, _)) in _header)
+            foreach (var v in _header)
             {
-                if (o > prev.offset)
+                if (v.Value.offset > prev.offset)
                 {
-                    updateKeys.Add(k);
+                    updateKeys.Add(v);
                 }
             }
 
-            foreach (var k in updateKeys.AsSpan())
+            foreach (var (k, (o, c)) in updateKeys.AsSpan())
             {
-                var v = _header[k];
-                _header[k] = v with { offset = v.offset - prev.count };
+                _header[k] = (o - prev.count, c);
             }
         }
 
-        await _fileAccessor.WriteAsync(JsonSerializer.SerializeToUtf8Bytes(_header, s_headerOptions), cancellationToken);
-        await _fileAccessor.WriteAsync(_writer.WrittenMemory, cancellationToken);
+        using (var scope = _writer.GetWriteBlockScope(0, _headerSize))
+        {
+            JsonSerializer.Serialize(_jsonWriter, _header, s_headerOptions);
+            _headerSize = scope.Consumed;
+            _jsonWriter.Reset();
+        }
+
+        return _fileAccessor.WriteAsync(_writer.WrittenMemory, cancellationToken);
     }
 
     /// <inheritdoc />
