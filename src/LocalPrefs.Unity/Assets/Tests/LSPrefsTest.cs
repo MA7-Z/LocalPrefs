@@ -1,4 +1,5 @@
-﻿#nullable enable
+﻿#if UNITY_WEBGL
+#nullable enable
 
 using System;
 using System.Collections;
@@ -198,3 +199,5 @@ namespace AndanteTribe.IO.Unity.Tests
         }
     }
 }
+
+#endif
