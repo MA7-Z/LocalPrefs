@@ -7,6 +7,7 @@
         "LocalPrefs.Tests"
     ],
     "includePlatforms": [
+        "Editor",
         "WebGL"
     ],
     "excludePlatforms": [],

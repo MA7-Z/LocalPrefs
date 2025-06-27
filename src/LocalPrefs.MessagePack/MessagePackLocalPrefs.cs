@@ -18,6 +18,8 @@ public class MessagePackLocalPrefs : ILocalPrefs
     private readonly Dictionary<string, (int offset, int count)> _header;
     private readonly ByteBufferWriter _writer;
 
+    private int _headerSize;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="MessagePackLocalPrefs"/> class with custom serializer options.
     /// This constructor loads existing data from the specified file path if available,
@@ -82,11 +84,8 @@ public class MessagePackLocalPrefs : ILocalPrefs
             var reader = new MessagePackReader(dataArray);
             var formatter = new DictionaryFormatter<string, (int, int)>();
             _header = formatter.Deserialize(ref reader, HeaderFormatterResolver.StandardOptions) ?? new();
-
-            var consumed = (int)reader.Consumed;
-            var dataLength = dataArray.Length - consumed;
-            dataArray.AsSpan(consumed, dataLength).CopyTo(dataArray.AsSpan(0, dataLength));
-            _writer.CurrentOffset = dataLength;
+            _headerSize = (int)reader.Consumed;
+            _writer.CurrentOffset = dataArray.Length;
         }
         else
         {
@@ -100,7 +99,7 @@ public class MessagePackLocalPrefs : ILocalPrefs
         if (_header.TryGetValue(key, out var v))
         {
             var (offset, count) = v;
-            var reader = new MessagePackReader(_writer.WrittenMemory.Slice(offset, count));
+            var reader = new MessagePackReader(_writer.WrittenMemory.Slice(_headerSize + offset, count));
             return MessagePackSerializer.Deserialize<T>(ref reader, _options);
         }
 
@@ -114,44 +113,42 @@ public class MessagePackLocalPrefs : ILocalPrefs
 
         if (_header.TryGetValue(key, out var prev))
         {
-            var trailingOffset = prev.offset + prev.count;
-            using var trailingData = new PooledList<byte>(_writer.CurrentOffset - trailingOffset);
-            trailingData.AddRange(_writer.WrittenSpan[trailingOffset..]);
-
-            _writer.CurrentOffset = prev.offset;
-            MessagePackSerializer.Serialize(_writer, value, _options, cancellationToken);
-            var count = _writer.CurrentOffset - prev.offset;
-            _header[key] = (prev.offset, count);
-
-            trailingData.AsSpan().CopyTo(_writer.GetSpan(trailingData.Count));
-            _writer.Advance(trailingData.Count);
-
-            using var updateKeys = new PooledList<string>(_header.Count);
-            foreach (var (k, (o, _)) in _header)
+            using (var scope = _writer.GetWriteBlockScope(_headerSize + prev.offset, prev.count))
             {
-                if (o > prev.offset)
+                MessagePackSerializer.Serialize(_writer, value, _options, cancellationToken);
+                _header[key] = prev with { count = scope.Consumed };
+            }
+
+            using var updateKeys = new PooledList<KeyValuePair<string, (int, int)>>(_header.Count);
+            foreach (var v in _header)
+            {
+                if (v.Value.offset > prev.offset)
                 {
-                    updateKeys.Add(k);
+                    updateKeys.Add(v);
                 }
             }
 
-            var diff = count - prev.count;
-            foreach (var k in updateKeys.AsSpan())
+            var diff = prev.count - _header[key].count;
+            foreach (var (k, (o, c)) in updateKeys.AsSpan())
             {
-                var (o, c) = _header[k];
                 _header[k] = (o + diff, c);
             }
         }
         else
         {
             var currentOffset = _writer.CurrentOffset;
+            var offset = currentOffset - _headerSize;
             MessagePackSerializer.Serialize(_writer, value, _options, cancellationToken);
-            _header.Add(key, (currentOffset, _writer.CurrentOffset - currentOffset));
+            _header.Add(key, (offset, _writer.CurrentOffset - currentOffset));
         }
 
-        await using var stream = _fileAccessor.GetWriteStream();
-        await MessagePackSerializer.SerializeAsync(stream, _header, HeaderFormatterResolver.StandardOptions, cancellationToken);
-        await stream.WriteAsync(_writer.WrittenMemory, cancellationToken);
+        using (var scope = _writer.GetWriteBlockScope(0, _headerSize))
+        {
+            MessagePackSerializer.Serialize(_writer, _header, HeaderFormatterResolver.StandardOptions, cancellationToken);
+            _headerSize = scope.Consumed;
+        }
+
+        await _fileAccessor.WriteAsync(_writer.WrittenMemory, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -162,35 +159,34 @@ public class MessagePackLocalPrefs : ILocalPrefs
         var prev = _header[key];
         _header.Remove(key);
 
-        var trailingOffset = prev.offset + prev.count;
-        using (var trailingData = new PooledList<byte>(_writer.CurrentOffset - trailingOffset))
+        // Delete the key's data from the buffer
+        using (_writer.GetWriteBlockScope(_headerSize + prev.offset, prev.count))
         {
-            trailingData.AddRange(_writer.WrittenSpan[trailingOffset..]);
-            _writer.CurrentOffset = prev.offset;
-            trailingData.AsSpan().CopyTo(_writer.GetSpan(trailingData.Count));
-            _writer.Advance(trailingData.Count);
         }
 
-        using (var updateKeys = new PooledList<string>(_header.Count))
+        using (var updateKeys = new PooledList<KeyValuePair<string, (int, int)>>(_header.Count))
         {
-            foreach (var (k, (o, _)) in _header)
+            foreach (var v in _header)
             {
-                if (o > prev.offset)
+                if (v.Value.offset > prev.offset)
                 {
-                    updateKeys.Add(k);
+                    updateKeys.Add(v);
                 }
             }
 
-            foreach (var k in updateKeys.AsSpan())
+            foreach (var (k, (o, c)) in updateKeys.AsSpan())
             {
-                var (o, c) = _header[k];
                 _header[k] = (o - prev.count, c);
             }
         }
 
-        await using var stream = _fileAccessor.GetWriteStream();
-        await MessagePackSerializer.SerializeAsync(stream, _header, HeaderFormatterResolver.StandardOptions, cancellationToken);
-        await stream.WriteAsync(_writer.WrittenMemory, cancellationToken);
+        using (var scope = _writer.GetWriteBlockScope(0, _headerSize))
+        {
+            MessagePackSerializer.Serialize(_header, HeaderFormatterResolver.StandardOptions, cancellationToken);
+            _headerSize = scope.Consumed;
+        }
+
+        await _fileAccessor.WriteAsync(_writer.WrittenMemory, cancellationToken);
     }
 
     /// <inheritdoc />
