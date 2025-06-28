@@ -19,7 +19,7 @@ charset = utf-8
 # スペルチェックの言語. 残念ながら1つだけ指定.
 spelling_language = en-US
 # 改行文字の前にある空白文字をすべて削除するか否か.
-trim_trailing_whitespace =true
+trim_trailing_whitespace = true
 # ファイルの最後に改行を追加するか否か. 絶対いらん.
 insert_final_newline = false
 
