@@ -110,7 +110,7 @@ public static readonly byte[] iv = {
 };
 
 // Set CryptoFileAccessor
-ILocalPrefs prefs = JsonLocalPrefs(new CryptoFileAccessor(path, key, iv));
+ILocalPrefs prefs = new JsonLocalPrefs(new CryptoFileAccessor(path, key, iv));
 
 // Save
 await prefs.SaveAsync("intkey", 123);
