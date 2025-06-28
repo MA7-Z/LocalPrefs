@@ -15,6 +15,10 @@ namespace AndanteTribe.IO.Tests
         {
             () => new JsonLocalPrefs(LocalPrefsTest.TestFilePath),
             () => new MessagePackLocalPrefs(LocalPrefsTest.TestFilePath),
+            () => new JsonLocalPrefs(new CryptoFileAccessor(LocalPrefsTest.TestFilePath, LocalPrefsTest.TestKey, LocalPrefsTest.TestIv)),
+            () => new MessagePackLocalPrefs(new CryptoFileAccessor(LocalPrefsTest.TestFilePath, LocalPrefsTest.TestKey, LocalPrefsTest.TestIv)),
+            () => new JsonLocalPrefs(new CryptoFileAccessor(LocalPrefsTest.TestFilePath, LocalPrefsTest.TestKey)),
+            () => new MessagePackLocalPrefs(new CryptoFileAccessor(LocalPrefsTest.TestFilePath, LocalPrefsTest.TestKey)),
         };
 
         [SetUp]
@@ -25,9 +29,21 @@ namespace AndanteTribe.IO.Tests
         [TearDown]
         public void TearDown()
         {
+            // 通常のテストファイルを削除
             if (File.Exists(LocalPrefsTest.TestFilePath))
             {
                 File.Delete(LocalPrefsTest.TestFilePath);
+            }
+
+            // 暗号化されたテストファイルも削除
+            if (File.Exists(LocalPrefsTest.TestFilePath + ".crypto.cbc"))
+            {
+                File.Delete(LocalPrefsTest.TestFilePath + ".crypto.cbc");
+            }
+
+            if (File.Exists(LocalPrefsTest.TestFilePath + ".crypto.ecb"))
+            {
+                File.Delete(LocalPrefsTest.TestFilePath + ".crypto.ecb");
             }
         }
 
