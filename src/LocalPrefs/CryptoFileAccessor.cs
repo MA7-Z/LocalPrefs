@@ -68,7 +68,7 @@ public class CryptoFileAccessor(FileAccessor fileAccessor, byte[] key, byte[] iv
         using var encryptor = aes.CreateEncryptor();
         using var memoryStream = new MemoryStream();
         await using var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write);
-        await cryptoStream.WriteAsync(bytes, cancellationToken);
+        cryptoStream.Write(bytes.Span);
         cryptoStream.FlushFinalBlock();
         await fileAccessor.WriteAsync(new(memoryStream.GetBuffer(), 0, (int)memoryStream.Length), cancellationToken);
     }
