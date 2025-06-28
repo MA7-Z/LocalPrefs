@@ -2,9 +2,6 @@
 
 namespace AndanteTribe.IO;
 
-using System;
-using System.Linq;
-
 /// <summary>
 /// Provides access to the shared instance of <see cref="ILocalPrefs"/>.
 /// </summary>
