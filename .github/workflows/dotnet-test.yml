@@ -1,4 +1,4 @@
-name: dotnet-test (github-hosted ubuntu-latest)
+name: dotnet-test
 
 on:
   pull_request:
