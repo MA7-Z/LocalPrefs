@@ -1,4 +1,4 @@
-name: unity-test (github-hosted ubuntu-latest)
+name: unity-test
 on:
   pull_request:
     types:
