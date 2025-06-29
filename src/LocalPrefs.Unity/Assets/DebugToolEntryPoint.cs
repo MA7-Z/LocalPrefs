@@ -1,4 +1,6 @@
-﻿using AndanteTribe.IO;
+﻿#if ENABLE_DEBUGTOOLKIT
+
+using AndanteTribe.IO;
 using AndanteTribe.IO.Unity;
 using DebugToolkit;
 using UnityEngine;
@@ -21,3 +23,5 @@ public sealed class DebugView : DebugViewerBase
         return root;
     }
 }
+
+#endif
