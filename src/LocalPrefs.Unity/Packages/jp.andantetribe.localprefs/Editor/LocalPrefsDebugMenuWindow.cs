@@ -3,7 +3,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace AndanteTribe.IO.Unity.Editor.Editor
+namespace AndanteTribe.IO.Unity.Editor
 {
     public class LocalPrefsDebugMenuWindow : EditorWindow
     {
