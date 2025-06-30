@@ -9,7 +9,7 @@ public interface IFileAccessor
     /// <summary>
     /// The file path where preference data will be stored.
     /// </summary>
-    string SavePath { protected internal get; init; }
+    string SavePath { internal get; init; }
 
     /// <summary>
     /// Reads the entire file into a byte array.
