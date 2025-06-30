@@ -7,14 +7,20 @@
         <member name="T:AndanteTribe.IO.CryptoFileAccessor">
             <summary>
             A file accessor that encrypts and decrypts file content using AES encryption.
-            Implements the decorator pattern by wrapping another FileAccessor instance.
+            Implements the decorator pattern by wrapping another <see cref="T:AndanteTribe.IO.IFileAccessor"/> instance.
             </summary>
-            <param name="fileAccessor">The underlying file accessor to be decorated with encryption.</param>
-            <param name="key">The encryption key used for AES encryption.</param>
-            <param name="iv">The initialization vector used for AES encryption.</param>
-            <param name="mode">The cipher mode to use for AES encryption. Defaults to CBC.</param>
         </member>
-        <member name="M:AndanteTribe.IO.CryptoFileAccessor.#ctor(AndanteTribe.IO.FileAccessor,System.Byte[],System.Byte[],System.Security.Cryptography.CipherMode)">
+        <member name="P:AndanteTribe.IO.CryptoFileAccessor.SavePath">
+            <inheritdoc />
+        </member>
+        <member name="M:AndanteTribe.IO.CryptoFileAccessor.#ctor(AndanteTribe.IO.IFileAccessor,System.Byte[])">
+            <summary>
+            The underlying file accessor that performs actual file operations.
+            </summary>
+            <param name="fileAccessor">FileAccessor to be decorated with encryption.</param>
+            <param name="key">Encryption key used for AES encryption.</param>
+        </member>
+        <member name="M:AndanteTribe.IO.CryptoFileAccessor.#ctor(AndanteTribe.IO.IFileAccessor,System.Byte[],System.Byte[],System.Security.Cryptography.CipherMode)">
             <summary>
             A file accessor that encrypts and decrypts file content using AES encryption.
             Implements the decorator pattern by wrapping another FileAccessor instance.
@@ -24,11 +30,11 @@
             <param name="iv">The initialization vector used for AES encryption.</param>
             <param name="mode">The cipher mode to use for AES encryption. Defaults to CBC.</param>
         </member>
-        <member name="M:AndanteTribe.IO.CryptoFileAccessor.#ctor(AndanteTribe.IO.FileAccessor,System.Byte[])">
+        <member name="M:AndanteTribe.IO.CryptoFileAccessor.#ctor(System.String@,System.Byte[])">
             <summary>
-            The underlying file accessor that performs actual file operations.
+            Initializes a new instance of the <see cref="T:AndanteTribe.IO.CryptoFileAccessor"/> class with a specified file path and encryption key.
             </summary>
-            <param name="fileAccessor">FileAccessor to be decorated with encryption.</param>
+            <param name="path">Path to the file where preference data will be stored.</param>
             <param name="key">Encryption key used for AES encryption.</param>
         </member>
         <member name="M:AndanteTribe.IO.CryptoFileAccessor.#ctor(System.String@,System.Byte[],System.Byte[],System.Security.Cryptography.CipherMode)">
@@ -39,13 +45,6 @@
             <param name="key">Encryption key used for AES encryption.</param>
             <param name="iv">Initialization vector used for AES encryption.</param>
             <param name="mode">Cipher mode to use for AES encryption. Defaults to CBC.</param>
-        </member>
-        <member name="M:AndanteTribe.IO.CryptoFileAccessor.#ctor(System.String@,System.Byte[])">
-            <summary>
-            Initializes a new instance of the <see cref="T:AndanteTribe.IO.CryptoFileAccessor"/> class with a specified file path and encryption key.
-            </summary>
-            <param name="path">Path to the file where preference data will be stored.</param>
-            <param name="key">Encryption key used for AES encryption.</param>
         </member>
         <member name="M:AndanteTribe.IO.CryptoFileAccessor.ReadAllBytes">
             <inheritdoc />
@@ -62,73 +61,68 @@
             </summary>
             <returns>A configured AES algorithm instance.</returns>
         </member>
-        <member name="T:AndanteTribe.IO.FileAccessor">
+        <member name="T:AndanteTribe.IO.IFileAccessor">
             <summary>
-            Abstract class that provides access to the file system.
+            Interface that provides access to the file system.
             Abstracts file read/write operations for local preferences.
             </summary>
-            <param name="savePath">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
         </member>
-        <member name="M:AndanteTribe.IO.FileAccessor.#ctor(System.String)">
-            <summary>
-            Abstract class that provides access to the file system.
-            Abstracts file read/write operations for local preferences.
-            </summary>
-            <param name="savePath">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
-        </member>
-        <member name="F:AndanteTribe.IO.FileAccessor.SavePath">
+        <member name="P:AndanteTribe.IO.IFileAccessor.SavePath">
             <summary>
             The file path where preference data will be stored.
             </summary>
         </member>
-        <member name="M:AndanteTribe.IO.FileAccessor.ReadAllBytes">
+        <member name="M:AndanteTribe.IO.IFileAccessor.ReadAllBytes">
             <summary>
             Reads the entire file into a byte array.
             </summary>
             <returns>A byte array containing the file's contents.</returns>
         </member>
-        <member name="M:AndanteTribe.IO.FileAccessor.WriteAsync(System.ReadOnlyMemory{System.Byte},System.Threading.CancellationToken)">
+        <member name="M:AndanteTribe.IO.IFileAccessor.WriteAsync(System.ReadOnlyMemory{System.Byte},System.Threading.CancellationToken)">
             <summary>
             Writes a byte array to the file asynchronously.
             </summary>
             <param name="bytes">Bytes to write to the file.</param>
             <param name="cancellationToken"> A token to cancel the asynchronous operation.</param>
         </member>
-        <member name="M:AndanteTribe.IO.FileAccessor.DeleteAsync(System.Threading.CancellationToken)">
+        <member name="M:AndanteTribe.IO.IFileAccessor.DeleteAsync(System.Threading.CancellationToken)">
             <summary>
             Deletes a file asynchronously.
             </summary>
             <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
             <returns>A task that represents the asynchronous delete operation.</returns>
         </member>
-        <member name="M:AndanteTribe.IO.FileAccessor.Create(System.String@)">
+        <member name="M:AndanteTribe.IO.IFileAccessor.Create(System.String@)">
             <summary>
-            Creates a default <see cref="T:AndanteTribe.IO.FileAccessor"/> for the specified path.
+            Creates a default <see cref="!:FileAccessor"/> for the specified path.
             </summary>
             <param name="path">Path to the file where preference data will be stored.</param>
-            <returns>An instance of <see cref="T:AndanteTribe.IO.FileAccessor"/> that uses the default file system operations.</returns>
+            <returns>An instance of <see cref="T:AndanteTribe.IO.IFileAccessor"/> that uses the default file system operations.</returns>
         </member>
-        <member name="T:AndanteTribe.IO.FileAccessor.DefaultFileAccessor">
+        <member name="T:AndanteTribe.IO.IFileAccessor.DefaultFileAccessor">
             <summary>
-            Default implementation of the FileAccessor interface.
+            Default implementation of the IFileAccessor interface.
             Provides standard file system operations using <see cref="N:System.IO"/>.
             </summary>
             <param name="path">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
         </member>
-        <member name="M:AndanteTribe.IO.FileAccessor.DefaultFileAccessor.#ctor(System.String@)">
+        <member name="M:AndanteTribe.IO.IFileAccessor.DefaultFileAccessor.#ctor(System.String@)">
             <summary>
-            Default implementation of the FileAccessor interface.
+            Default implementation of the IFileAccessor interface.
             Provides standard file system operations using <see cref="N:System.IO"/>.
             </summary>
             <param name="path">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
         </member>
-        <member name="M:AndanteTribe.IO.FileAccessor.DefaultFileAccessor.ReadAllBytes">
+        <member name="P:AndanteTribe.IO.IFileAccessor.DefaultFileAccessor.SavePath">
             <inheritdoc />
         </member>
-        <member name="M:AndanteTribe.IO.FileAccessor.DefaultFileAccessor.WriteAsync(System.ReadOnlyMemory{System.Byte},System.Threading.CancellationToken)">
+        <member name="M:AndanteTribe.IO.IFileAccessor.DefaultFileAccessor.ReadAllBytes">
             <inheritdoc />
         </member>
-        <member name="M:AndanteTribe.IO.FileAccessor.DefaultFileAccessor.DeleteAsync(System.Threading.CancellationToken)">
+        <member name="M:AndanteTribe.IO.IFileAccessor.DefaultFileAccessor.WriteAsync(System.ReadOnlyMemory{System.Byte},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:AndanteTribe.IO.IFileAccessor.DefaultFileAccessor.DeleteAsync(System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
         <member name="T:AndanteTribe.IO.ILocalPrefs">
