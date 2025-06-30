@@ -1,57 +1,58 @@
 ﻿namespace AndanteTribe.IO;
 
 /// <summary>
-/// Abstract class that provides access to the file system.
+/// Interface that provides access to the file system.
 /// Abstracts file read/write operations for local preferences.
 /// </summary>
-/// <param name="savePath">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
-public abstract class FileAccessor(string savePath)
+public interface IFileAccessor
 {
     /// <summary>
     /// The file path where preference data will be stored.
     /// </summary>
-    protected internal readonly string SavePath = savePath;
+    string SavePath { internal get; init; }
 
     /// <summary>
     /// Reads the entire file into a byte array.
     /// </summary>
     /// <returns>A byte array containing the file's contents.</returns>
-    public abstract byte[] ReadAllBytes();
+    byte[] ReadAllBytes();
 
     /// <summary>
     /// Writes a byte array to the file asynchronously.
     /// </summary>
     /// <param name="bytes">Bytes to write to the file.</param>
     /// <param name="cancellationToken"> A token to cancel the asynchronous operation.</param>
-    public abstract ValueTask WriteAsync(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default);
+    ValueTask WriteAsync(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a file asynchronously.
     /// </summary>
     /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     /// <returns>A task that represents the asynchronous delete operation.</returns>
-    public abstract ValueTask DeleteAsync(CancellationToken cancellationToken = default);
+    ValueTask DeleteAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Creates a default <see cref="FileAccessor"/> for the specified path.
     /// </summary>
     /// <param name="path">Path to the file where preference data will be stored.</param>
-    /// <returns>An instance of <see cref="FileAccessor"/> that uses the default file system operations.</returns>
-    public static FileAccessor Create(in string path) => new DefaultFileAccessor(path);
+    /// <returns>An instance of <see cref="IFileAccessor"/> that uses the default file system operations.</returns>
+    static IFileAccessor Create(in string path) => new DefaultFileAccessor(path);
 
     /// <summary>
-    /// Default implementation of the FileAccessor interface.
+    /// Default implementation of the IFileAccessor interface.
     /// Provides standard file system operations using <see cref="System.IO"/>.
     /// </summary>
     /// <param name="path">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
-    private sealed class DefaultFileAccessor(in string path) : FileAccessor(path)
+    private sealed class DefaultFileAccessor(in string path) : IFileAccessor
     {
         /// <inheritdoc />
-        public override byte[] ReadAllBytes() =>
-            File.Exists(SavePath) ? File.ReadAllBytes(SavePath) : [];
+        public string SavePath { get; init; } = path;
 
         /// <inheritdoc />
-        public override async ValueTask WriteAsync(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default)
+        public byte[] ReadAllBytes() => File.Exists(SavePath) ? File.ReadAllBytes(SavePath) : [];
+
+        /// <inheritdoc />
+        public async ValueTask WriteAsync(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             await using var stream = File.Create(SavePath, 4096, FileOptions.Asynchronous);
@@ -59,7 +60,7 @@ public abstract class FileAccessor(string savePath)
         }
 
         /// <inheritdoc />
-        public override ValueTask DeleteAsync(CancellationToken cancellationToken = default)
+        public ValueTask DeleteAsync(CancellationToken cancellationToken = default)
         {
             if (File.Exists(SavePath))
             {
