@@ -14,7 +14,7 @@ namespace AndanteTribe.IO.MessagePack;
 public class MessagePackLocalPrefs : ILocalPrefs
 {
     private readonly MessagePackSerializerOptions? _options;
-    private readonly IFileAccessor _fileAccessor;
+    private readonly FileAccessor _fileAccessor;
     private readonly Dictionary<string, (int offset, int count)> _header;
     private readonly ByteBufferWriter _writer;
 
@@ -31,7 +31,7 @@ public class MessagePackLocalPrefs : ILocalPrefs
     /// <param name="savePath">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
     /// <param name="resolver">Optional custom formatter resolver for <see cref="MessagePack"/> serialization. If null, default resolver is used.</param>
     public MessagePackLocalPrefs(in string savePath, IFormatterResolver? resolver)
-        : this(IFileAccessor.Create(savePath), resolver == null ? null : MessagePackSerializer.DefaultOptions.WithResolver(resolver))
+        : this(FileAccessor.Create(savePath), resolver == null ? null : MessagePackSerializer.DefaultOptions.WithResolver(resolver))
     {
     }
 
@@ -42,7 +42,7 @@ public class MessagePackLocalPrefs : ILocalPrefs
     /// </summary>
     /// <param name="fileAccessor">Optional file system accessor for reading/writing operations. If null, the default implementation is used.</param>
     /// <param name="resolver">Optional custom formatter resolver for <see cref="MessagePack"/> serialization. If null, default resolver is used.</param>
-    public MessagePackLocalPrefs(IFileAccessor fileAccessor, IFormatterResolver? resolver)
+    public MessagePackLocalPrefs(FileAccessor fileAccessor, IFormatterResolver? resolver)
         : this(fileAccessor, resolver == null ? null : MessagePackSerializer.DefaultOptions.WithResolver(resolver))
     {
     }
@@ -58,7 +58,7 @@ public class MessagePackLocalPrefs : ILocalPrefs
     /// <param name="savePath">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
     /// <param name="options">Optional MessagePack serializer options to customize serialization behavior. If null, default options are used with LZ4 compression.</param>
     public MessagePackLocalPrefs(in string savePath, MessagePackSerializerOptions? options = null)
-        : this(IFileAccessor.Create(savePath), options)
+        : this(FileAccessor.Create(savePath), options)
     {
     }
 
@@ -72,7 +72,7 @@ public class MessagePackLocalPrefs : ILocalPrefs
     /// </summary>
     /// <param name="fileAccessor">Optional file system accessor for reading/writing operations. If null, the default implementation is used.</param>
     /// <param name="options">Optional MessagePack serializer options to customize serialization behavior. If null, default options are used with LZ4 compression.</param>
-    public MessagePackLocalPrefs(IFileAccessor fileAccessor, MessagePackSerializerOptions? options = null)
+    public MessagePackLocalPrefs(FileAccessor fileAccessor, MessagePackSerializerOptions? options = null)
     {
         _options = (options ?? MessagePackSerializer.DefaultOptions).WithCompression(MessagePackCompression.Lz4Block);
         _fileAccessor = fileAccessor;
