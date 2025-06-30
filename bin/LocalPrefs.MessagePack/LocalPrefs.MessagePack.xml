@@ -25,7 +25,7 @@
             <param name="savePath">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
             <param name="resolver">Optional custom formatter resolver for <see cref="N:AndanteTribe.IO.MessagePack"/> serialization. If null, default resolver is used.</param>
         </member>
-        <member name="M:AndanteTribe.IO.MessagePack.MessagePackLocalPrefs.#ctor(AndanteTribe.IO.FileAccessor,MessagePack.IFormatterResolver)">
+        <member name="M:AndanteTribe.IO.MessagePack.MessagePackLocalPrefs.#ctor(AndanteTribe.IO.IFileAccessor,MessagePack.IFormatterResolver)">
             <summary>
             Initializes a new instance of the <see cref="T:AndanteTribe.IO.MessagePack.MessagePackLocalPrefs"/> class with a custom formatter resolver.
             This constructor provides a convenient way to specify a custom formatter resolver for <see cref="N:AndanteTribe.IO.MessagePack"/> serialization.
@@ -46,7 +46,7 @@
             <param name="savePath">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
             <param name="options">Optional MessagePack serializer options to customize serialization behavior. If null, default options are used with LZ4 compression.</param>
         </member>
-        <member name="M:AndanteTribe.IO.MessagePack.MessagePackLocalPrefs.#ctor(AndanteTribe.IO.FileAccessor,MessagePack.MessagePackSerializerOptions)">
+        <member name="M:AndanteTribe.IO.MessagePack.MessagePackLocalPrefs.#ctor(AndanteTribe.IO.IFileAccessor,MessagePack.MessagePackSerializerOptions)">
             <summary>
             Initializes a new instance of the <see cref="T:AndanteTribe.IO.MessagePack.MessagePackLocalPrefs"/> class with custom serializer options.
             This constructor loads existing data from the specified file path if available,
