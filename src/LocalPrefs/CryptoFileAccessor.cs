@@ -4,50 +4,20 @@ namespace AndanteTribe.IO;
 
 /// <summary>
 /// A file accessor that encrypts and decrypts file content using AES encryption.
-/// Implements the decorator pattern by wrapping another <see cref="IFileAccessor"/> instance.
+/// Implements the decorator pattern by wrapping another FileAccessor instance.
 /// </summary>
-public class CryptoFileAccessor : IFileAccessor
+/// <param name="fileAccessor">The underlying file accessor to be decorated with encryption.</param>
+/// <param name="key">The encryption key used for AES encryption.</param>
+/// <param name="iv">The initialization vector used for AES encryption.</param>
+/// <param name="mode">The cipher mode to use for AES encryption. Defaults to CBC.</param>
+public class CryptoFileAccessor(FileAccessor fileAccessor, byte[] key, byte[] iv, CipherMode mode = CipherMode.CBC) : FileAccessor(fileAccessor.SavePath)
 {
-    private readonly IFileAccessor _fileAccessor;
-    private readonly byte[] _key;
-    private readonly byte[] _iv;
-    private readonly CipherMode _mode;
-
-    /// <inheritdoc />
-    public string SavePath { get; init; }
-
     /// <summary>
     /// The underlying file accessor that performs actual file operations.
     /// </summary>
     /// <param name="fileAccessor">FileAccessor to be decorated with encryption.</param>
     /// <param name="key">Encryption key used for AES encryption.</param>
-    public CryptoFileAccessor(IFileAccessor fileAccessor, byte[] key) : this(fileAccessor, key, [], CipherMode.ECB)
-    {
-    }
-
-    /// <summary>
-    /// A file accessor that encrypts and decrypts file content using AES encryption.
-    /// Implements the decorator pattern by wrapping another FileAccessor instance.
-    /// </summary>
-    /// <param name="fileAccessor">The underlying file accessor to be decorated with encryption.</param>
-    /// <param name="key">The encryption key used for AES encryption.</param>
-    /// <param name="iv">The initialization vector used for AES encryption.</param>
-    /// <param name="mode">The cipher mode to use for AES encryption. Defaults to CBC.</param>
-    public CryptoFileAccessor(IFileAccessor fileAccessor, byte[] key, byte[] iv, CipherMode mode = CipherMode.CBC)
-    {
-        _fileAccessor = fileAccessor;
-        _key = key;
-        _iv = iv;
-        _mode = mode;
-        SavePath = fileAccessor.SavePath;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="CryptoFileAccessor"/> class with a specified file path and encryption key.
-    /// </summary>
-    /// <param name="path">Path to the file where preference data will be stored.</param>
-    /// <param name="key">Encryption key used for AES encryption.</param>
-    public CryptoFileAccessor(in string path, byte[] key) : this(path, key, [], CipherMode.ECB)
+    public CryptoFileAccessor(FileAccessor fileAccessor, byte[] key) : this(fileAccessor, key, [], CipherMode.ECB)
     {
     }
 
@@ -58,19 +28,23 @@ public class CryptoFileAccessor : IFileAccessor
     /// <param name="key">Encryption key used for AES encryption.</param>
     /// <param name="iv">Initialization vector used for AES encryption.</param>
     /// <param name="mode">Cipher mode to use for AES encryption. Defaults to CBC.</param>
-    public CryptoFileAccessor(in string path, byte[] key, byte[] iv, CipherMode mode = CipherMode.CBC)
+    public CryptoFileAccessor(in string path, byte[] key, byte[] iv, CipherMode mode = CipherMode.CBC) : this(Create(path), key, iv, mode)
     {
-        _fileAccessor = IFileAccessor.Create(path);
-        _key = key;
-        _iv = iv;
-        _mode = mode;
-        SavePath = path;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CryptoFileAccessor"/> class with a specified file path and encryption key.
+    /// </summary>
+    /// <param name="path">Path to the file where preference data will be stored.</param>
+    /// <param name="key">Encryption key used for AES encryption.</param>
+    public CryptoFileAccessor(in string path, byte[] key) : this(Create(path), key, [], CipherMode.ECB)
+    {
     }
 
     /// <inheritdoc />
-    public byte[] ReadAllBytes()
+    public override byte[] ReadAllBytes()
     {
-        var encryptedBytes = _fileAccessor.ReadAllBytes();
+        var encryptedBytes = fileAccessor.ReadAllBytes();
         if (encryptedBytes.Length == 0)
         {
             return [];
@@ -86,7 +60,7 @@ public class CryptoFileAccessor : IFileAccessor
     }
 
     /// <inheritdoc />
-    public async ValueTask WriteAsync(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default)
+    public override async ValueTask WriteAsync(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -96,11 +70,12 @@ public class CryptoFileAccessor : IFileAccessor
         await using var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write);
         cryptoStream.Write(bytes.Span);
         cryptoStream.FlushFinalBlock();
-        await _fileAccessor.WriteAsync(new(memoryStream.GetBuffer(), 0, (int)memoryStream.Length), cancellationToken);
+        await fileAccessor.WriteAsync(new(memoryStream.GetBuffer(), 0, (int)memoryStream.Length), cancellationToken);
     }
 
     /// <inheritdoc />
-    public ValueTask DeleteAsync(CancellationToken cancellationToken = default) => _fileAccessor.DeleteAsync(cancellationToken);
+    public override ValueTask DeleteAsync(CancellationToken cancellationToken = default) =>
+        fileAccessor.DeleteAsync(cancellationToken);
 
     /// <summary>
     /// Creates an AES algorithm instance with the provided key, IV, and cipher mode.
@@ -109,12 +84,12 @@ public class CryptoFileAccessor : IFileAccessor
     private Aes CreateAes()
     {
         var aes = Aes.Create();
-        aes.Key = _key;
-        if (_iv.Length != 0)
+        aes.Key = key;
+        if (iv.Length != 0)
         {
-            aes.IV = _iv;
+            aes.IV = iv;
         }
-        aes.Mode = _mode;
+        aes.Mode = mode;
         return aes;
     }
 }

@@ -22,7 +22,7 @@
             <param name="savePath">The file path where preference data will be stored. The file will be created if it doesn't exist.</param>
             <param name="options">Optional JSON serializer options to customize serialization behavior. If null, default options are used.</param>
         </member>
-        <member name="M:AndanteTribe.IO.Json.JsonLocalPrefs.#ctor(AndanteTribe.IO.IFileAccessor,System.Text.Json.JsonSerializerOptions)">
+        <member name="M:AndanteTribe.IO.Json.JsonLocalPrefs.#ctor(AndanteTribe.IO.FileAccessor,System.Text.Json.JsonSerializerOptions)">
             <summary>
             Initializes a new instance of the <see cref="T:AndanteTribe.IO.Json.JsonLocalPrefs"/> class.
             This constructor loads existing data from the specified file path if available,

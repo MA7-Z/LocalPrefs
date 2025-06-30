@@ -84,13 +84,13 @@ string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.L
 // MessagePack-CSharp
 ILocalPrefs msgpackPrefs = new MessagePackLocalPrefs(path);
 ```
-## IFileAccessor
+## FileAccessor
 LocalPrefsでのファイルの入出力操作実装の抽象レイヤーです。
-`IFileAccessor` インターフェイスを継承したオブジェクトを利用者側で実装し、ファイル操作周りに独自の処理を入れ込むことができます。
+`FileAccessor` クラスを継承したクラスを利用者側で実装し、ファイル操作周りに独自の処理を入れ込むことができます。
 
-ファクトリメソッド `IFileAccessor.Create(in string path)` で、 `System.IO` を利用した標準的なファイル操作を実装済みの `IFileAccessor` インスタンスを作成することができます。
+ファクトリメソッド `FileAccessor.Create(in string path)` で、 `System.IO` を利用した標準的なファイル操作を実装済みの `FileAccessor` インスタンスを作成することができます。
 ## 暗号化
-`IFileAccessor` 実装の一例である `CryptoFileAccessor` を、暗号化セーブ・複合化ロードの汎用実装として提供しています。
+`FileAccessor` 実装の一例である `CryptoFileAccessor` を、暗号化セーブ・複合化ロードの汎用実装として提供しています。
 
 ```cs
 using AndanteTribe.IO;
@@ -126,7 +126,7 @@ int value = prefs.Load<int>("intkey");
 ```cs
 public JsonLocalPrefs(in string savePath, JsonSerializerOptions? options = null);
 
-public JsonLocalPrefs(IFileAccessor fileAccessor, JsonSerializerOptions? options = null);
+public JsonLocalPrefs(FileAccessor fileAccessor, JsonSerializerOptions? options = null);
 ```
 ## MessagePack-CSharp
 `LocalPrefs.MessagePack` を使用すると、[MessagePack-CSharp](https://github.com/MessagePack-CSharp/MessagePack-CSharp) を基盤にしたローカルセーブ・ロードを利用することができます。
@@ -135,11 +135,11 @@ public JsonLocalPrefs(IFileAccessor fileAccessor, JsonSerializerOptions? options
 ```cs
 public MessagePackLocalPrefs(in string savePath, IFormatterResolver? resolver);
 
-public MessagePackLocalPrefs(IFileAccessor fileAccessor, IFormatterResolver? resolver);
+public MessagePackLocalPrefs(FileAccessor fileAccessor, IFormatterResolver? resolver);
 
 public MessagePackLocalPrefs(in string savePath, MessagePackSerializerOptions? options = null);
 
-public MessagePackLocalPrefs(IFileAccessor fileAccessor, MessagePackSerializerOptions? options = null);
+public MessagePackLocalPrefs(FileAccessor fileAccessor, MessagePackSerializerOptions? options = null);
 ```
 ## Unity
 LocalPrefsはUnityで使用可能です。

@@ -10,38 +10,32 @@ namespace AndanteTribe.IO.Unity
     /// <summary>
     /// Provides file access functionality for WebGL builds using Local Storage.
     /// </summary>
-    public class LSAccessor : IFileAccessor
+    public class LSAccessor : FileAccessor
     {
-        private readonly string _savePath;
-
-        string IFileAccessor.SavePath
-        {
-            get => _savePath;
-            init => _savePath = value;
-        }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="LSAccessor"/> class with the specified path.
         /// </summary>
         /// <param name="path">The key to the Local Storage file.</param>
-        public LSAccessor(in string path) => _savePath = path;
+        public LSAccessor(in string path) : base(path)
+        {
+        }
 
         /// <inheritdoc />
-        public byte[] ReadAllBytes() => LSUtils.ReadAllBytes(_savePath);
+        public override byte[] ReadAllBytes() => LSUtils.ReadAllBytes(SavePath);
 
         /// <inheritdoc />
-        public ValueTask WriteAsync(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default)
+        public override ValueTask WriteAsync(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            LSUtils.WriteAllBytes(_savePath, bytes.Span);
+            LSUtils.WriteAllBytes(SavePath, bytes.Span);
             return default;
         }
 
         /// <inheritdoc />
-        public ValueTask DeleteAsync(CancellationToken cancellationToken = default)
+        public override ValueTask DeleteAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            LSUtils.Delete(_savePath);
+            LSUtils.Delete(SavePath);
             return default;
         }
     }
