@@ -97,12 +97,12 @@ string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.L
 ILocalPrefs msgpackPrefs = new MessagePackLocalPrefs(path);
 ```
 
-## IFileAccessor
+## FileAccessor
 
 This is an abstraction layer for file I/O used in LocalPrefs.
-You can implement the `IFileAccessor` interface to define custom file-handling logic.
+You can subclass `FileAccessor` to implement custom file-handling logic.
 
-The factory method `IFileAccessor.Create(in string path)` provides a default implementation using `System.IO`.
+The factory method `FileAccessor.Create(in string path)` provides a default implementation using `System.IO`.
 
 ## Encryption
 
@@ -145,7 +145,7 @@ The `JsonLocalPrefs` class implements `ILocalPrefs` and provides the following c
 ```csharp
 public JsonLocalPrefs(in string savePath, JsonSerializerOptions? options = null);
 
-public JsonLocalPrefs(IFileAccessor fileAccessor, JsonSerializerOptions? options = null);
+public JsonLocalPrefs(FileAccessor fileAccessor, JsonSerializerOptions? options = null);
 ```
 
 ## MessagePack-CSharp
@@ -156,11 +156,11 @@ The `MessagePackLocalPrefs` class implements `ILocalPrefs` and provides the foll
 ```csharp
 public MessagePackLocalPrefs(in string savePath, IFormatterResolver? resolver);
 
-public MessagePackLocalPrefs(IFileAccessor fileAccessor, IFormatterResolver? resolver);
+public MessagePackLocalPrefs(FileAccessor fileAccessor, IFormatterResolver? resolver);
 
 public MessagePackLocalPrefs(in string savePath, MessagePackSerializerOptions? options = null);
 
-public MessagePackLocalPrefs(IFileAccessor fileAccessor, MessagePackSerializerOptions? options = null);
+public MessagePackLocalPrefs(FileAccessor fileAccessor, MessagePackSerializerOptions? options = null);
 ```
 
 ## Unity
