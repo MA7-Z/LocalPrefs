@@ -27,7 +27,7 @@ LocalPrefsはこれらの問題を解消し、かつ高速な実装を提供し�
 1. `LocalPrefs.Shared` の保存先はUnityの場合は `Application.persistentDataPath`、.NETの場合もそれに準じたパスが指定されます。
 2. 保存先や暗号化など、独自の拡張をすることを入れ込むことを可能にするAPIを提供します。また、セーブ・ロードの一括制御をする実装の抽象レイヤーとして `ILocalPrefs` インターフェイスを提供します。
 3. `System.Text.Json` または [MessagePack-CSharp](https://github.com/MessagePack-CSharp/MessagePack-CSharp) を利用した、高速な読み込み実装を提供します。
-4. javascriptネイティブな実装との連携により、Local storageとIndexedDBへの保存・展開を可能とするAPIの提供、およびそれらを利用した一括制御実装を提供します。
+4. JavaScriptネイティブな実装との連携により、Local storageとIndexedDBへの保存・展開を可能とするAPIの提供、およびそれらを利用した一括制御実装を提供します。
 ## インストール
 ### NuGet packages
 LocalPrefsを利用するには .NET Standard2.1 以上が必要です。ただしこちらは準備中です。
@@ -168,9 +168,9 @@ https://github.com/AndanteTribe/LocalPrefs.git?path=src/LocalPrefs.Unity/Package
 > LocalPrefsのNuGet準備が完了すれば、上記の煩雑なインストール手順は改善される見込みです。
 ### LocalPrefs.Sharedの保存先の自動設定
 `LocalPrefs.Unity` を導入した場合、`LocalPrefs.Shared` はデフォルトで起動時に自動的に保存先を適切なものに設定されます。
-具体的は、Web以外であれば `Application.persistentDataPath`、WebではLocal storageになります。
+具体的には、Web以外であれば `Application.persistentDataPath`、WebではLocal storageになります。
 ### Webサポート
-`LocalPrefs.Unity` ではjavascriptネイティブな実装と連携した、ブラウザでのローカルセーブ・ロードをサポートします。
+`LocalPrefs.Unity` ではJavaScriptネイティブな実装と連携した、ブラウザでのローカルセーブ・ロードをサポートします。
 
 保存先には IndexedDB と Local storage の2つをサポートしています。
 データが軽量であれば Local storage は IndexedDB より高速に機能しますが、ゲーム内のスクリーンショットなどの大きなデータを扱う場合は IndexedDB が便利です。
