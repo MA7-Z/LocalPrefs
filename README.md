@@ -163,7 +163,7 @@ A Unity-specific extension package, `LocalPrefs.Unity`, is also provided.
 1. Install [NuGetForUnity](https://github.com/GlitchEnzo/NuGetForUnity).
 2. Open `NuGet > Manage NuGet Packages` and install the `System.Text.Json` or `MessagePack-CSharp` package.
 3. If you use `MessagePack-CSharp`, also install the `MessagePack.Unity` package.
-   > Install the `MessagePack.Unity` package by referencing the git URL. Open the Package Manager window and select `Add Package from git URL...`, then enter the following path:
+   > Install `MessagePack.Unity` package by referencing the git URL. Open Package Manager window and press `Add Package from git URL...`, enter following path
    >
    > https://github.com/MessagePack-CSharp/MessagePack-CSharp.git?path=src/MessagePack.UnityClient/Assets/Scripts/MessagePack
    > [MessagePack-CSharp README.md](https://github.com/MessagePack-CSharp/MessagePack-CSharp?tab=readme-ov-file#unity-support)
