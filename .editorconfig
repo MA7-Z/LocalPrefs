@@ -62,6 +62,9 @@ dotnet_naming_symbols.public_members.applicable_kinds = field, property, method
 dotnet_naming_symbols.public_members.applicable_accessibilities = public
 dotnet_naming_style.pascal_case_underscore_style.capitalization = pascall_case
 
+# ReSharper(JetBrains Rider) name rule
+dotnet_naming_rule.unity_serialized_field_rule.import_to_resharper = False
+
 #### .NET Coding Conventions ####
 # IDE0003: this または Me の修飾を削除する.
 dotnet_style_qualification_for_field = false:suggestion
@@ -318,3 +321,4 @@ csharp_place_field_attribute_on_same_line = false
 
 [*.{csproj,vbproj,proj,nativeproj,locproj}]
 charset = utf-8
+
